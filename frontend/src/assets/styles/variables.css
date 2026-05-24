@@ -1,0 +1,25 @@
+:root {
+  --primary: #42A5F5;
+  --primary-dark: #1E88E5;
+  --primary-light: #E3F2FD;
+  --secondary: #2196F3;
+  --secondary-light: #BBDEFB;
+  --accent: #FF9800;
+  --accent-light: #FFE0B2;
+  --danger: #f44336;
+  --danger-light: #FFCDD2;
+  --purple: #9C27B0;
+  --purple-light: #E1BEE7;
+  --teal: #009688;
+  --teal-light: #B2DFDB;
+  --bg: #f0f4f8;
+  --card-bg: #ffffff;
+  --text: #2c3e50;
+  --text-secondary: #607d8b;
+  --border: #e0e6ed;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}

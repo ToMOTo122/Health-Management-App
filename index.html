@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>健康小助手 - 一站式健康管理</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue-router@4/dist/vue-router.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --primary: #42A5F5;
+      --primary-dark: #1E88E5;
+      --primary-light: #E3F2FD;
+      --secondary: #2196F3;
+      --secondary-light: #BBDEFB;
+      --accent: #FF9800;
+      --accent-light: #FFE0B2;
+      --danger: #f44336;
+      --danger-light: #FFCDD2;
+      --purple: #9C27B0;
+      --purple-light: #E1BEE7;
+      --teal: #009688;
+      --teal-light: #B2DFDB;
+      --bg: #f0f4f8;
+      --card-bg: #ffffff;
+      --text: #2c3e50;
+      --text-secondary: #607d8b;
+      --border: #e0e6ed;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== LOGIN PAGE ===== */
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #e3f2fd 0%, #e8f0fe 50%, #fce4ec 100%);
+      padding: 20px;
+    }
+    .login-container {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: var(--shadow-lg);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 440px;
+      border: 1px solid rgba(255,255,255,0.6);
+    }
+    .login-logo {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .login-logo .icon {
+      font-size: 56px;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+    .login-logo h1 {
+      font-size: 26px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .login-logo p { color: var(--text-secondary); margin-top: 6px; font-size: 14px; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      transition: var(--transition);
+      background: #fafbfc;
+      outline: none;
+      font-family: inherit;
+    }
+    .form-input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(66,165,245,0.15); }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(66,165,245,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(66,165,245,0.4); }
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      width: 100%;
+    }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-sm {
+      padding: 6px 14px;
+      font-size: 13px;
+      border-radius: 8px;
+    }
+    .btn-outline {
+      background: #fff;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+    }
+    .btn-outline:hover { background: var(--primary-light); }
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+    .btn-accent {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .text-link {
+      color: var(--secondary);
+      cursor: pointer;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .text-link:hover { text-decoration: underline; }
+    .text-center { text-align: center; }
+    .text-muted { color: var(--text-secondary); font-size: 13px; }
+    .mt-3 { margin-top: 16px; }
+    .mt-4 { margin-top: 24px; }
+    .mb-3 { margin-bottom: 16px; }
+    .mb-4 { margin-bottom: 24px; }
+
+    /* ===== MAIN LAYOUT ===== */
+    .app-layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(180deg, #0d2137 0%, #1565C0 30%, #1E88E5 100%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+      transition: transform var(--transition);
+    }
+    .sidebar-header {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+    .sidebar-header .logo-icon {
+      font-size: 32px;
+      margin-bottom: 4px;
+    }
+    .sidebar-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .sidebar-header .subtitle {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px 0;
+      overflow-y: auto;
+    }
+    .sidebar-nav .nav-section {
+      padding: 8px 24px 4px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.5;
+      margin-top: 8px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 24px;
+      margin: 2px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .nav-item.active { background: rgba(255,255,255,0.2); color: #fff; font-weight: 600; }
+    .nav-item i { width: 20px; text-align: center; font-size: 16px; }
+
+    .sidebar-footer {
+      padding: 16px 24px;
+      border-top: 1px solid rgba(255,255,255,0.12);
+    }
+    .user-mini {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 10px;
+      transition: var(--transition);
+    }
+    .user-mini:hover { background: rgba(255,255,255,0.1); }
+    .user-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #FF5722);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .user-mini .info { flex: 1; min-width: 0; }
+    .user-mini .name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-mini .role { font-size: 11px; opacity: 0.7; }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 260px;
+      padding: 28px 32px;
+      min-height: 100vh;
+    }
+
+    /* Page Header */
+    .page-header {
+      margin-bottom: 28px;
+    }
+    .page-header h1 {
+      font-size: 26px;
+      font-weight: 700;
+    }
+    .page-header p { color: var(--text-secondary); margin-top: 4px; font-size: 14px; }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      transition: var(--transition);
+    }
+    .card:hover { box-shadow: var(--shadow-lg); }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .card-header h3 { font-size: 17px; font-weight: 600; }
+    .card-header .badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .badge-green { background: var(--primary-light); color: var(--primary-dark); }
+    .badge-blue { background: var(--secondary-light); color: #1565C0; }
+    .badge-orange { background: var(--accent-light); color: #E65100; }
+    .badge-red { background: var(--danger-light); color: #C62828; }
+    .badge-purple { background: var(--purple-light); color: #6A1B9A; }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+    }
+    .stat-card.sleep::after { background: var(--purple); }
+    .stat-card.steps::after { background: var(--secondary); }
+    .stat-card.water::after { background: var(--teal); }
+    .stat-card.exercise::after { background: var(--accent); }
+    .stat-card.diet::after { background: var(--danger); }
+    .stat-card.stress::after { background: #607D8B; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .stat-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .stat-card.sleep .stat-icon { background: var(--purple-light); color: var(--purple); }
+    .stat-card.steps .stat-icon { background: var(--secondary-light); color: var(--secondary); }
+    .stat-card.water .stat-icon { background: var(--teal-light); color: var(--teal); }
+    .stat-card.exercise .stat-icon { background: var(--accent-light); color: var(--accent); }
+    .stat-card.diet .stat-icon { background: var(--danger-light); color: var(--danger); }
+    .stat-card.stress .stat-icon { background: #ECEFF1; color: #607D8B; }
+    .stat-info .stat-value { font-size: 24px; font-weight: 700; }
+    .stat-info .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .stat-info .stat-sub { font-size: 11px; color: var(--text-secondary); }
+
+    /* Grid layouts */
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+    /* Progress bars */
+    .progress-wrap { margin-bottom: 16px; }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .progress-bar {
+      height: 10px;
+      background: var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.6s ease;
+    }
+    .progress-fill.green { background: linear-gradient(90deg, var(--primary), #64B5F6); }
+    .progress-fill.blue { background: linear-gradient(90deg, var(--secondary), #42A5F5); }
+    .progress-fill.orange { background: linear-gradient(90deg, var(--accent), #FFA726); }
+    .progress-fill.purple { background: linear-gradient(90deg, var(--purple), #AB47BC); }
+    .progress-fill.teal { background: linear-gradient(90deg, var(--teal), #26A69A); }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab {
+      padding: 10px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: var(--transition);
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+    }
+    .tab.active { background: #fff; color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-weight: 600; }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* Quick-add buttons */
+    .quick-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .quick-btn {
+      padding: 10px 18px;
+      border-radius: 24px;
+      border: 2px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: inherit;
+      color: var(--text);
+    }
+    .quick-btn:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary-dark); }
+    .quick-btn i { font-size: 14px; }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      padding: 14px 20px;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 500;
+      font-size: 14px;
+      box-shadow: var(--shadow-lg);
+      animation: slideIn 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 280px;
+    }
+    .toast.success { background: #42A5F5; }
+    .toast.error { background: #f44336; }
+    .toast.info { background: #2196F3; }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 90%;
+      max-width: 520px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+    }
+    .modal h3 { margin-bottom: 20px; font-size: 18px; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Charts area */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 280px;
+    }
+    .chart-container canvas { width: 100% !important; }
+
+    /* Chat */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 200px);
+      min-height: 500px;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .chat-msg {
+      display: flex;
+      gap: 10px;
+      max-width: 80%;
+    }
+    .chat-msg.user { align-self: flex-end; flex-direction: row-reverse; }
+    .chat-msg.assistant { align-self: flex-start; }
+    .chat-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .chat-msg.user .chat-avatar { background: var(--secondary-light); color: var(--secondary); }
+    .chat-msg.assistant .chat-avatar { background: var(--primary-light); color: var(--primary-dark); }
+    .chat-bubble {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .chat-msg.user .chat-bubble { background: var(--secondary); color: #fff; border-bottom-right-radius: 4px; }
+    .chat-msg.assistant .chat-bubble { background: #f5f5f5; border-bottom-left-radius: 4px; }
+    .chat-input-area {
+      display: flex;
+      gap: 10px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .chat-input-area input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: 24px;
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+    .chat-input-area input:focus { border-color: var(--primary); }
+    .quick-questions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .quick-q {
+      padding: 6px 14px;
+      border-radius: 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 12px;
+      transition: var(--transition);
+      font-family: inherit;
+      color: var(--text-secondary);
+    }
+    .quick-q:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+    /* Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 12px;
+      background: var(--bg);
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    .data-table td { padding: 12px; border-bottom: 1px solid var(--border); }
+    .data-table tr:hover td { background: #fafbfc; }
+
+    /* Disclaimer */
+    .disclaimer {
+      background: #FFF8E1;
+      border: 1px solid #FFE082;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #F57F17;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .disclaimer i { margin-top: 1px; flex-shrink: 0; }
+
+    /* Responsive */
+    .mobile-header {
+      display: none;
+      background: linear-gradient(135deg, #1565C0, #1E88E5);
+      color: #fff;
+      padding: 14px 20px;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 99;
+    }
+    .mobile-header h2 { font-size: 17px; }
+    .hamburger { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 4px; }
+
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+      padding: 6px 0 env(safe-area-inset-bottom, 8px);
+      z-index: 100;
+    }
+    .bottom-nav-inner {
+      display: flex;
+      justify-content: space-around;
+    }
+    .bottom-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 10px;
+      color: var(--text-secondary);
+      border: none;
+      background: none;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+    .bottom-nav-item.active { color: var(--primary); }
+    .bottom-nav-item i { font-size: 20px; }
+
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; padding: 16px; }
+      .mobile-header { display: flex; }
+      .bottom-nav { display: block; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .main-content { padding-bottom: 80px; }
+      .page-header h1 { font-size: 20px; }
+      .stat-card { padding: 16px; }
+      .stat-icon { width: 40px; height: 40px; font-size: 18px; border-radius: 10px; }
+      .stat-info .stat-value { font-size: 20px; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .quick-actions { gap: 6px; }
+      .quick-btn { padding: 8px 12px; font-size: 12px; }
+      .login-container { padding: 32px 24px; }
+    }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    @media (max-width: 900px) {
+      .sidebar-overlay.visible { display: block; }
+    }
+
+    /* Record form */
+    .record-form { max-width: 600px; }
+    .record-form .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 480px) {
+      .record-form .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* Summary cards on dashboard */
+    .summary-text {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text-secondary);
+    }
+    .summary-text strong { color: var(--text); }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-secondary);
+    }
+    .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+    .empty-state p { font-size: 14px; }
+
+    /* Stress emoji */
+    .stress-options { display: flex; gap: 12px; }
+    .stress-opt {
+      flex: 1;
+      padding: 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: #fff;
+      font-family: inherit;
+    }
+    .stress-opt:hover { border-color: var(--primary); }
+    .stress-opt.selected { border-color: var(--primary); background: var(--primary-light); }
+    .stress-opt .emoji { font-size: 32px; display: block; margin-bottom: 8px; }
+    .stress-opt .level { font-weight: 600; font-size: 14px; }
+
+    /* Export modal */
+    .export-preview {
+      background: #f5f5f5;
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <!-- Form templates (DOM-based for reliable compilation) -->
+  <script type="text/x-template" id="sleep-form-tpl">
+    <div>
+      <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.date"></div>
+      <div class="form-row">
+        <div class="form-group"><label>入睡时间</label><input class="form-input" type="time" v-model="form.time"></div>
+        <div class="form-group"><label>睡眠时长 (小时)</label><input class="form-input" type="number" v-model.number="form.duration" min="0" max="24" step="0.5" placeholder="例如 7.5"></div>
+      </div>
+      <div class="form-group"><label>睡眠质量</label>
+        <select class="form-input" v-model="form.quality">
+          <option value="good">😊 好</option>
+          <option value="fair">😐 一般</option>
+          <option value="poor">😞 差</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" @click="save"><i class="fas fa-floppy-disk"></i> 保存</button>
+        <button class="btn btn-secondary" @click="$emit('cancel')">取消</button>
+      </div>
+    </div>
+  </script>
+  <script type="text/x-template" id="steps-form-tpl">
+    <div>
+      <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.date"></div>
+      <div class="form-group"><label>步数</label><input class="form-input" type="number" v-model.number="form.steps" min="0" placeholder="例如 10000"></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" @click="save"><i class="fas fa-floppy-disk"></i> 保存</button>
+        <button class="btn btn-secondary" @click="$emit('cancel')">取消</button>
+      </div>
+    </div>
+  </script>
+  <script type="text/x-template" id="water-form-tpl">
+    <div>
+      <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.date"></div>
+      <div class="form-group">
+        <label>饮水量 (ml) - 快速添加：</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <button class="btn btn-sm btn-outline" @click="quickAdd(200)">+200ml 💧</button>
+          <button class="btn btn-sm btn-outline" @click="quickAdd(300)">+300ml</button>
+          <button class="btn btn-sm btn-outline" @click="quickAdd(500)">+500ml</button>
+        </div>
+        <input class="form-input" type="number" v-model.number="form.amount" min="0" placeholder="或手动输入总量">
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" @click="save"><i class="fas fa-floppy-disk"></i> 保存</button>
+        <button class="btn btn-secondary" @click="$emit('cancel')">取消</button>
+      </div>
+    </div>
+  </script>
+  <script type="text/x-template" id="exercise-form-tpl">
+    <div>
+      <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.date"></div>
+      <div class="form-group"><label>运动类型</label><input class="form-input" v-model="form.exerciseType" placeholder="例如 跑步、游泳、瑜伽"></div>
+      <div class="form-row">
+        <div class="form-group"><label>时长 (分钟)</label><input class="form-input" type="number" v-model.number="form.duration" min="0" placeholder="30"></div>
+        <div class="form-group"><label>消耗热量 (kcal)</label><input class="form-input" type="number" v-model.number="form.calories" min="0" placeholder="280"></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" @click="save"><i class="fas fa-floppy-disk"></i> 保存</button>
+        <button class="btn btn-secondary" @click="$emit('cancel')">取消</button>
+      </div>
+    </div>
+  </script>
+  <script type="text/x-template" id="diet-form-tpl">
+    <div>
+      <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.date"></div>
+      <div class="form-group"><label>食物名称</label><input class="form-input" v-model="form.food" placeholder="例如 鸡胸肉沙拉"></div>
+      <div class="form-row">
+        <div class="form-group"><label>摄入时间</label><input class="form-input" type="time" v-model="form.mealTime"></div>
+        <div class="form-group"><label>热量 (kcal)</label><input class="form-input" type="number" v-model.number="form.calories" min="0" placeholder="450"></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" @click="save"><i class="fas fa-floppy-disk"></i> 保存</button>
+        <button class="btn btn-secondary" @click="$emit('cancel')">取消</button>
+      </div>
+    </div>
+  </script>
+  <script type="text/x-template" id="stress-form-tpl">
+    <div>
+      <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.date"></div>
+      <div class="form-group">
+        <label>压力水平</label>
+        <div class="stress-options">
+          <button v-for="l in levels" :key="l.key" class="stress-opt" :class="{ selected: form.level === l.key }" @click="select(l.key, l.score)">
+            <span class="emoji">{{ l.emoji }}</span>
+            <span class="level">{{ l.label }}</span>
+          </button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" @click="save"><i class="fas fa-floppy-disk"></i> 保存</button>
+        <button class="btn btn-secondary" @click="$emit('cancel')">取消</button>
+      </div>
+    </div>
+  </script>
+  <script type="text/x-template" id="cycle-form-tpl">
+    <div>
+      <div class="form-row">
+        <div class="form-group"><label>开始日期</label><input class="form-input" type="date" v-model="form.startDate"></div>
+        <div class="form-group"><label>结束日期</label><input class="form-input" type="date" v-model="form.endDate"></div>
+      </div>
+      <div class="form-group"><label>周期长度 (天)</label><input class="form-input" type="number" v-model.number="form.cycleLength" min="1" max="60" placeholder="28"></div>
+      <div class="form-group"><label>备注</label><input class="form-input" v-model="form.notes" placeholder="症状、感受等（仅自己可见）"></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" @click="save"><i class="fas fa-floppy-disk"></i> 保存</button>
+        <button class="btn btn-secondary" @click="$emit('cancel')">取消</button>
+      </div>
+    </div>
+  </script>
+
+  <div id="app">
+    <!-- Toast notifications -->
+    <div class="toast-container">
+      <div v-for="(t, i) in toasts" :key="i" :class="'toast ' + t.type">
+        <i :class="t.type === 'success' ? 'fas fa-check-circle' : t.type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-info-circle'"></i>
+        {{ t.msg }}
+      </div>
+    </div>
+
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" :class="{ visible: sidebarOpen }" @click="sidebarOpen = false"></div>
+
+    <!-- Login Page -->
+    <div v-if="!isLoggedIn" class="login-page">
+      <div class="login-container">
+        <div class="login-logo">
+          <div class="icon">🏥</div>
+          <h1>健康小助手</h1>
+          <p>一站式健康管理平台</p>
+        </div>
+
+        <div v-if="loginMode === 'login'">
+          <div class="form-group">
+            <label>邮箱 / 用户名</label>
+            <input class="form-input" v-model="loginForm.email" placeholder="请输入邮箱或用户名" @keyup.enter="doLogin">
+          </div>
+          <div class="form-group">
+            <label>密码</label>
+            <input class="form-input" type="password" v-model="loginForm.password" placeholder="请输入密码" @keyup.enter="doLogin">
+          </div>
+          <button class="btn btn-primary" @click="doLogin">
+            <i class="fas fa-sign-in-alt"></i> 登录
+          </button>
+          <p class="text-center mt-3">
+            <span class="text-link" @click="loginMode = 'register'">还没有账户？立即注册</span>
+          </p>
+          <p class="text-center mt-3">
+            <span class="text-link" @click="demoLogin" style="color: var(--accent);">🔑 演示模式快速登录</span>
+          </p>
+        </div>
+
+        <div v-else>
+          <div class="form-group">
+            <label>昵称</label>
+            <input class="form-input" v-model="registerForm.nickname" placeholder="请输入昵称">
+          </div>
+          <div class="form-group">
+            <label>邮箱</label>
+            <input class="form-input" v-model="registerForm.email" placeholder="请输入邮箱">
+          </div>
+          <div class="form-group">
+            <label>密码</label>
+            <input class="form-input" type="password" v-model="registerForm.password" placeholder="请输入密码（至少6位）">
+          </div>
+          <div class="form-group">
+            <label>确认密码</label>
+            <input class="form-input" type="password" v-model="registerForm.confirmPassword" placeholder="请再次输入密码">
+          </div>
+          <button class="btn btn-primary" @click="doRegister">
+            <i class="fas fa-user-plus"></i> 注册
+          </button>
+          <p class="text-center mt-3">
+            <span class="text-link" @click="loginMode = 'login'">已有账户？返回登录</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main App (logged in) -->
+    <div v-else class="app-layout">
+      <!-- Mobile header -->
+      <div class="mobile-header">
+        <button class="hamburger" @click="sidebarOpen = !sidebarOpen">
+          <i class="fas fa-bars"></i>
+        </button>
+        <h2>健康小助手</h2>
+        <button class="hamburger" @click="showNotifications">
+          <i class="fas fa-bell"></i>
+        </button>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="sidebar" :class="{ open: sidebarOpen }">
+        <div class="sidebar-header">
+          <div class="logo-icon">🏥</div>
+          <h2>健康小助手</h2>
+          <div class="subtitle">一站式健康管理</div>
+        </div>
+        <nav class="sidebar-nav" @click="sidebarOpen = false">
+          <div class="nav-section">主菜单</div>
+          <a class="nav-item" :class="{ active: currentRoute === 'dashboard' }" @click="navigate('dashboard')">
+            <i class="fas fa-th-large"></i> 仪表盘
+          </a>
+          <a class="nav-item" :class="{ active: currentRoute === 'record' }" @click="navigate('record')">
+            <i class="fas fa-plus-circle"></i> 健康记录
+          </a>
+          <a class="nav-item" :class="{ active: currentRoute === 'analysis' }" @click="navigate('analysis')">
+            <i class="fas fa-chart-line"></i> 数据分析
+          </a>
+          <div class="nav-section">更多</div>
+          <a class="nav-item" :class="{ active: currentRoute === 'chat' }" @click="navigate('chat')">
+            <i class="fas fa-robot"></i> AI 健康助手
+          </a>
+          <a class="nav-item" :class="{ active: currentRoute === 'profile' }" @click="navigate('profile')">
+            <i class="fas fa-user-cog"></i> 个人中心
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="user-mini" @click="navigate('profile'); sidebarOpen = false">
+            <div class="user-avatar">{{ userProfile.nickname.charAt(0) }}</div>
+            <div class="info">
+              <div class="name">{{ userProfile.nickname }}</div>
+              <div class="role">健康达人</div>
+            </div>
+            <i class="fas fa-chevron-right" style="opacity: 0.5; font-size: 12px;"></i>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- DASHBOARD -->
+        <div v-if="currentRoute === 'dashboard'">
+          <div class="page-header">
+            <h1>👋 你好，{{ userProfile.nickname }}</h1>
+            <p>{{ todayDate }} · 来看看你今天的健康状况</p>
+          </div>
+
+          <!-- Health summary -->
+          <div class="stats-grid">
+            <div class="stat-card sleep" @click="navigate('record')">
+              <div class="stat-icon"><i class="fas fa-moon"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ todayStats.sleep }}<small style="font-size:14px;font-weight:400"> 小时</small></div>
+                <div class="stat-label">今日睡眠</div>
+                <div class="stat-sub" v-if="userGoals.sleep">目标 {{ userGoals.sleep }}h</div>
+              </div>
+            </div>
+            <div class="stat-card steps" @click="navigate('record')">
+              <div class="stat-icon"><i class="fas fa-shoe-prints"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ todayStats.steps.toLocaleString() }}</div>
+                <div class="stat-label">今日步数</div>
+                <div class="stat-sub" v-if="userGoals.steps">目标 {{ userGoals.steps.toLocaleString() }}</div>
+              </div>
+            </div>
+            <div class="stat-card water" @click="navigate('record')">
+              <div class="stat-icon"><i class="fas fa-droplet"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ todayStats.water }}<small style="font-size:14px;font-weight:400"> ml</small></div>
+                <div class="stat-label">今日饮水</div>
+                <div class="stat-sub" v-if="userGoals.water">目标 {{ userGoals.water }}ml</div>
+              </div>
+            </div>
+            <div class="stat-card diet" @click="navigate('record')">
+              <div class="stat-icon"><i class="fas fa-utensils"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ todayStats.calories }}<small style="font-size:14px;font-weight:400"> kcal</small></div>
+                <div class="stat-label">今日摄入热量</div>
+                <div class="stat-sub" v-if="userGoals.calories">目标 {{ userGoals.calories }}kcal</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Goal progress -->
+          <div class="grid-2 mb-4">
+            <div class="card">
+              <div class="card-header"><h3>🎯 目标完成进度</h3></div>
+              <div class="progress-wrap">
+                <div class="progress-label"><span>💤 睡眠</span><span>{{ todayStats.sleep }}/{{ userGoals.sleep || 8 }}h</span></div>
+                <div class="progress-bar"><div class="progress-fill purple" :style="{ width: Math.min(100, todayStats.sleep / (userGoals.sleep || 8) * 100) + '%' }"></div></div>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress-label"><span>🚶 步数</span><span>{{ todayStats.steps.toLocaleString() }}/{{ (userGoals.steps || 10000).toLocaleString() }}</span></div>
+                <div class="progress-bar"><div class="progress-fill blue" :style="{ width: Math.min(100, todayStats.steps / (userGoals.steps || 10000) * 100) + '%' }"></div></div>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress-label"><span>💧 饮水</span><span>{{ todayStats.water }}/{{ userGoals.water || 2000 }}ml</span></div>
+                <div class="progress-bar"><div class="progress-fill teal" :style="{ width: Math.min(100, todayStats.water / (userGoals.water || 2000) * 100) + '%' }"></div></div>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress-label"><span>🏃 运动</span><span>{{ todayStats.exerciseMin }}/{{ userGoals.exercise || 30 }}min</span></div>
+                <div class="progress-bar"><div class="progress-fill orange" :style="{ width: Math.min(100, todayStats.exerciseMin / (userGoals.exercise || 30) * 100) + '%' }"></div></div>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress-label"><span>🍽️ 热量</span><span>{{ todayStats.calories }}/{{ userGoals.calories || 2000 }}kcal</span></div>
+                <div class="progress-bar"><div class="progress-fill green" :style="{ width: Math.min(100, todayStats.calories / (userGoals.calories || 2000) * 100) + '%' }"></div></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h3>📋 快速记录</h3></div>
+              <div class="quick-actions">
+                <button class="quick-btn" @click="quickRecord('sleep')"><i class="fas fa-moon"></i> 睡眠</button>
+                <button class="quick-btn" @click="quickRecord('steps')"><i class="fas fa-shoe-prints"></i> 步数</button>
+                <button class="quick-btn" @click="quickRecord('water')"><i class="fas fa-droplet"></i> 饮水</button>
+                <button class="quick-btn" @click="quickRecord('exercise')"><i class="fas fa-dumbbell"></i> 运动</button>
+                <button class="quick-btn" @click="quickRecord('diet')"><i class="fas fa-utensils"></i> 饮食</button>
+                <button class="quick-btn" @click="quickRecord('stress')"><i class="fas fa-brain"></i> 压力</button>
+                <button class="quick-btn" @click="quickRecord('cycle')"><i class="fas fa-calendar"></i> 生理周期</button>
+              </div>
+
+              <!-- Today's records summary -->
+              <div style="margin-top: 16px;">
+                <h4 style="font-size:13px; color: var(--text-secondary); margin-bottom: 10px;">📝 今日记录</h4>
+                <div v-if="todayRecords.length === 0" style="color: var(--text-secondary); font-size: 13px; padding: 12px 0;">
+                  今天还没有记录哦，点击上方按钮快速添加～
+                </div>
+                <div v-else v-for="r in todayRecords.slice(0, 5)" :key="r.id" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+                  <span>{{ recordTypeIcon(r.type) }}</span>
+                  <span style="flex:1;">{{ recordSummary(r) }}</span>
+                  <span style="color: var(--text-secondary); font-size: 12px;">{{ r.time || '' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly summary -->
+          <div class="card">
+            <div class="card-header">
+              <h3>📊 本周健康总结</h3>
+              <span class="badge badge-green">7天</span>
+            </div>
+            <div class="summary-text" v-html="weeklySummary"></div>
+          </div>
+
+          <!-- Quick record modal -->
+          <div v-if="quickModal" class="modal-overlay" @click.self="quickModal = null">
+            <div class="modal">
+              <h3>快速记录 - {{ recordTypeName(quickModal) }}</h3>
+              <SleepForm v-if="quickModal === 'sleep'" :editing="null" @saved="onQuickSaved" @cancel="quickModal = null" />
+              <StepsForm v-if="quickModal === 'steps'" :editing="null" @saved="onQuickSaved" @cancel="quickModal = null" />
+              <WaterForm v-if="quickModal === 'water'" :editing="null" @saved="onQuickSaved" @cancel="quickModal = null" />
+              <ExerciseForm v-if="quickModal === 'exercise'" :editing="null" @saved="onQuickSaved" @cancel="quickModal = null" />
+              <DietForm v-if="quickModal === 'diet'" :editing="null" @saved="onQuickSaved" @cancel="quickModal = null" />
+              <StressForm v-if="quickModal === 'stress'" :editing="null" @saved="onQuickSaved" @cancel="quickModal = null" />
+              <CycleForm v-if="quickModal === 'cycle'" :editing="null" @saved="onQuickSaved" @cancel="quickModal = null" />
+            </div>
+          </div>
+        </div>
+
+        <!-- HEALTH RECORD PAGE -->
+        <div v-if="currentRoute === 'record'">
+          <div class="page-header">
+            <h1>📝 健康记录</h1>
+            <p>记录你的每日健康数据</p>
+          </div>
+
+          <div class="tabs">
+            <button class="tab" :class="{ active: recordTab === 'sleep' }" @click="recordTab = 'sleep'">💤 睡眠</button>
+            <button class="tab" :class="{ active: recordTab === 'steps' }" @click="recordTab = 'steps'">🚶 步数</button>
+            <button class="tab" :class="{ active: recordTab === 'water' }" @click="recordTab = 'water'">💧 饮水</button>
+            <button class="tab" :class="{ active: recordTab === 'exercise' }" @click="recordTab = 'exercise'">🏃 运动</button>
+            <button class="tab" :class="{ active: recordTab === 'diet' }" @click="recordTab = 'diet'">🍽️ 饮食</button>
+            <button class="tab" :class="{ active: recordTab === 'stress' }" @click="recordTab = 'stress'">🧠 压力</button>
+            <button class="tab" :class="{ active: recordTab === 'cycle' }" @click="recordTab = 'cycle'">📅 生理周期</button>
+          </div>
+
+          <div class="grid-2">
+            <div class="card record-form">
+              <SleepForm v-if="recordTab === 'sleep'" :editing="editingRecord" @saved="onRecordSaved" @cancel="editingRecord = null" />
+              <StepsForm v-if="recordTab === 'steps'" :editing="editingRecord" @saved="onRecordSaved" @cancel="editingRecord = null" />
+              <WaterForm v-if="recordTab === 'water'" :editing="editingRecord" @saved="onRecordSaved" @cancel="editingRecord = null" />
+              <ExerciseForm v-if="recordTab === 'exercise'" :editing="editingRecord" @saved="onRecordSaved" @cancel="editingRecord = null" />
+              <DietForm v-if="recordTab === 'diet'" :editing="editingRecord" @saved="onRecordSaved" @cancel="editingRecord = null" />
+              <StressForm v-if="recordTab === 'stress'" :editing="editingRecord" @saved="onRecordSaved" @cancel="editingRecord = null" />
+              <CycleForm v-if="recordTab === 'cycle'" :editing="editingRecord" @saved="onRecordSaved" @cancel="editingRecord = null" />
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>📋 历史记录</h3>
+                <input type="date" v-model="filterDate" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;" @change="loadRecords">
+              </div>
+              <div v-if="filteredRecords.length === 0" class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>暂无记录</p>
+              </div>
+              <table v-else class="data-table" style="width:100%;">
+                <thead>
+                  <tr><th>日期</th><th>类型</th><th>详情</th><th>操作</th></tr>
+                </thead>
+                <tbody>
+                  <tr v-for="r in filteredRecords" :key="r.id">
+                    <td>{{ r.date }}</td>
+                    <td>{{ recordTypeIcon(r.type) }} {{ recordTypeName(r.type) }}</td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ recordSummary(r) }}</td>
+                    <td>
+                      <button class="btn btn-sm btn-outline" @click="editRecord(r)" style="margin-right:4px;"><i class="fas fa-edit"></i></button>
+                      <button class="btn btn-sm btn-danger" @click="deleteRecord(r.id)"><i class="fas fa-trash"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ANALYSIS PAGE -->
+        <div v-if="currentRoute === 'analysis'">
+          <div class="page-header">
+            <h1>📈 数据分析</h1>
+            <p>查看你的健康数据趋势</p>
+          </div>
+
+          <div class="tabs">
+            <button class="tab" :class="{ active: analysisPeriod === 'week' }" @click="analysisPeriod = 'week'">本周</button>
+            <button class="tab" :class="{ active: analysisPeriod === 'month' }" @click="analysisPeriod = 'month'">本月</button>
+            <button class="tab" :class="{ active: analysisPeriod === '3month' }" @click="analysisPeriod = '3month'">近三个月</button>
+          </div>
+
+          <!-- Stats cards -->
+          <div class="stats-grid">
+            <div class="stat-card sleep">
+              <div class="stat-icon"><i class="fas fa-moon"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ analysisStats.avgSleep }}<small style="font-size:14px;font-weight:400"> h</small></div>
+                <div class="stat-label">日均睡眠</div>
+              </div>
+            </div>
+            <div class="stat-card steps">
+              <div class="stat-icon"><i class="fas fa-shoe-prints"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ (analysisStats.avgSteps / 1000).toFixed(1) }}<small style="font-size:14px;font-weight:400"> k</small></div>
+                <div class="stat-label">日均步数</div>
+              </div>
+            </div>
+            <div class="stat-card water">
+              <div class="stat-icon"><i class="fas fa-droplet"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ analysisStats.avgWater }}<small style="font-size:14px;font-weight:400"> ml</small></div>
+                <div class="stat-label">日均饮水</div>
+              </div>
+            </div>
+            <div class="stat-card exercise">
+              <div class="stat-icon"><i class="fas fa-dumbbell"></i></div>
+              <div class="stat-info">
+                <div class="stat-value">{{ analysisStats.avgExercise }}<small style="font-size:14px;font-weight:400"> min</small></div>
+                <div class="stat-label">日均运动</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div class="grid-2 mb-4">
+            <div class="card">
+              <div class="card-header"><h3>💤 睡眠时长趋势</h3></div>
+              <div class="chart-container"><canvas id="chartSleep"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>🚶 步数趋势</h3></div>
+              <div class="chart-container"><canvas id="chartSteps"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>💧 饮水趋势</h3></div>
+              <div class="chart-container"><canvas id="chartWater"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>🔥 热量摄入趋势</h3></div>
+              <div class="chart-container"><canvas id="chartCalories"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Health summary -->
+          <div class="card">
+            <div class="card-header"><h3>📊 {{ analysisPeriodName }}健康总结</h3></div>
+            <div class="summary-text" v-html="analysisSummary"></div>
+          </div>
+        </div>
+
+        <!-- AI CHAT PAGE -->
+        <div v-if="currentRoute === 'chat'">
+          <div class="page-header">
+            <h1>🤖 AI 健康助手</h1>
+            <p>你的专属智能健康顾问（演示版）</p>
+          </div>
+
+          <div class="card">
+            <div class="chat-container">
+              <div class="chat-messages" ref="chatMessagesEl">
+                <div v-for="(msg, i) in chatMessages" :key="i" :class="'chat-msg ' + msg.role">
+                  <div class="chat-avatar">
+                    <i v-if="msg.role === 'user'" class="fas fa-user"></i>
+                    <i v-else class="fas fa-robot"></i>
+                  </div>
+                  <div class="chat-bubble" v-html="msg.content"></div>
+                </div>
+                <div v-if="chatLoading" class="chat-msg assistant">
+                  <div class="chat-avatar"><i class="fas fa-robot"></i></div>
+                  <div class="chat-bubble">思考中...</div>
+                </div>
+              </div>
+
+              <div class="quick-questions">
+                <button class="quick-q" @click="askQuickQ('我这周平均睡眠多久？')">💤 本周平均睡眠？</button>
+                <button class="quick-q" @click="askQuickQ('最近饮水是否达标？')">💧 饮水达标了吗？</button>
+                <button class="quick-q" @click="askQuickQ('给我一些健康建议')">💡 健康建议</button>
+                <button class="quick-q" @click="askQuickQ('如何改善睡眠质量？')">🌙 如何改善睡眠？</button>
+              </div>
+
+              <div class="chat-input-area">
+                <input v-model="chatInput" placeholder="输入健康问题..." @keyup.enter="sendChat" :disabled="chatLoading">
+                <button class="btn btn-primary btn-sm" @click="sendChat" :disabled="chatLoading || !chatInput.trim()" style="border-radius:50%;width:42px;height:42px;padding:0;">
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="disclaimer">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>本系统仅提供一般健康管理建议，不能替代专业医生诊断。如有身体不适，请及时就医。</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROFILE PAGE -->
+        <div v-if="currentRoute === 'profile'">
+          <div class="page-header">
+            <h1>⚙️ 个人中心</h1>
+            <p>管理你的个人信息和健康目标</p>
+          </div>
+
+          <div class="grid-2">
+            <!-- Personal info -->
+            <div class="card">
+              <div class="card-header"><h3>👤 个人资料</h3></div>
+              <div class="form-group">
+                <label>昵称</label>
+                <input class="form-input" v-model="userProfile.nickname">
+              </div>
+              <div class="form-group">
+                <label>性别</label>
+                <select class="form-input" v-model="userProfile.gender">
+                  <option value="">请选择</option>
+                  <option value="male">男</option>
+                  <option value="female">女</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>年龄</label>
+                <input class="form-input" type="number" v-model.number="userProfile.age" min="1" max="150">
+              </div>
+              <div class="form-group">
+                <label>身高 (cm)</label>
+                <input class="form-input" type="number" v-model.number="userProfile.height" min="50" max="250" step="0.1">
+              </div>
+              <div class="form-group">
+                <label>体重 (kg)</label>
+                <input class="form-input" type="number" v-model.number="userProfile.weight" min="20" max="300" step="0.1">
+              </div>
+              <button class="btn btn-primary" @click="saveProfile">
+                <i class="fas fa-floppy-disk"></i> 保存资料
+              </button>
+            </div>
+
+            <!-- Health goals -->
+            <div class="card">
+              <div class="card-header"><h3>🎯 健康目标</h3></div>
+              <div class="form-group">
+                <label>每日睡眠目标 (小时)</label>
+                <input class="form-input" type="number" v-model.number="userGoals.sleep" min="1" max="24" step="0.5">
+              </div>
+              <div class="form-group">
+                <label>每日步数目标</label>
+                <input class="form-input" type="number" v-model.number="userGoals.steps" min="100" max="100000" step="100">
+              </div>
+              <div class="form-group">
+                <label>每日饮水目标 (ml)</label>
+                <input class="form-input" type="number" v-model.number="userGoals.water" min="100" max="10000" step="100">
+              </div>
+              <div class="form-group">
+                <label>每日运动目标 (分钟)</label>
+                <input class="form-input" type="number" v-model.number="userGoals.exercise" min="5" max="480" step="5">
+              </div>
+              <div class="form-group">
+                <label>每日热量摄入目标 (kcal)</label>
+                <input class="form-input" type="number" v-model.number="userGoals.calories" min="500" max="10000" step="50">
+              </div>
+              <button class="btn btn-primary" @click="saveGoals">
+                <i class="fas fa-floppy-disk"></i> 保存目标
+              </button>
+            </div>
+          </div>
+
+          <!-- Data management -->
+          <div class="card mt-4">
+            <div class="card-header"><h3>💾 数据管理</h3></div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+              <button class="btn btn-outline" @click="exportData">
+                <i class="fas fa-download"></i> 导出健康数据 (JSON)
+              </button>
+              <button class="btn btn-accent" @click="showExportPreview = true" v-if="exportContent">
+                <i class="fas fa-eye"></i> 查看导出内容
+              </button>
+              <button class="btn btn-danger" @click="confirmClearData">
+                <i class="fas fa-trash"></i> 清除所有数据
+              </button>
+            </div>
+            <div v-if="showExportPreview && exportContent" class="mt-3">
+              <div class="export-preview">{{ exportContent }}</div>
+            </div>
+          </div>
+
+          <!-- Logout -->
+          <div class="card mt-4 text-center">
+            <button class="btn btn-danger" @click="doLogout" style="width:auto;">
+              <i class="fas fa-sign-out-alt"></i> 退出登录
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <!-- Bottom nav (mobile) -->
+      <nav class="bottom-nav">
+        <div class="bottom-nav-inner">
+          <button class="bottom-nav-item" :class="{ active: currentRoute === 'dashboard' }" @click="navigate('dashboard')">
+            <i class="fas fa-th-large"></i> 仪表盘
+          </button>
+          <button class="bottom-nav-item" :class="{ active: currentRoute === 'record' }" @click="navigate('record')">
+            <i class="fas fa-plus-circle"></i> 记录
+          </button>
+          <button class="bottom-nav-item" :class="{ active: currentRoute === 'analysis' }" @click="navigate('analysis')">
+            <i class="fas fa-chart-line"></i> 分析
+          </button>
+          <button class="bottom-nav-item" :class="{ active: currentRoute === 'chat' }" @click="navigate('chat')">
+            <i class="fas fa-robot"></i> AI助手
+          </button>
+          <button class="bottom-nav-item" :class="{ active: currentRoute === 'profile' }" @click="navigate('profile')">
+            <i class="fas fa-user"></i> 我的
+          </button>
+        </div>
+      </nav>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, reactive, computed, watch, onMounted, nextTick, toRaw } = Vue;
+
+    // ==================== STORAGE HELPERS ====================
+    const STORAGE_KEY = 'health_app_data';
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return null;
+    }
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function getDefaultData() {
+      const today = new Date().toISOString().split('T')[0];
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      const d2 = new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0];
+      const d3 = new Date(Date.now() - 3 * 86400000).toISOString().split('T')[0];
+      const d4 = new Date(Date.now() - 4 * 86400000).toISOString().split('T')[0];
+      const d5 = new Date(Date.now() - 5 * 86400000).toISOString().split('T')[0];
+      const d6 = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0];
+
+      return {
+        userProfile: {
+          nickname: '健康达人',
+          gender: '',
+          age: null,
+          height: null,
+          weight: null,
+        },
+        userGoals: {
+          sleep: 8,
+          steps: 10000,
+          water: 2000,
+          exercise: 30,
+          calories: 2000,
+        },
+        records: [
+          { id: 1, type: 'sleep', date: today, time: '23:00', duration: 7.5, quality: 'good' },
+          { id: 2, type: 'steps', date: today, steps: 8500 },
+          { id: 3, type: 'water', date: today, amount: 1200 },
+          { id: 4, type: 'exercise', date: today, exerciseType: '跑步', duration: 30, calories: 280 },
+          { id: 5, type: 'diet', date: today, food: '鸡胸肉沙拉', mealTime: '12:30', calories: 450 },
+          { id: 6, type: 'stress', date: today, level: 'medium', score: 5 },
+          { id: 7, type: 'sleep', date: yesterday, time: '22:30', duration: 8, quality: 'good' },
+          { id: 8, type: 'steps', date: yesterday, steps: 12000 },
+          { id: 9, type: 'water', date: yesterday, amount: 2100 },
+          { id: 10, type: 'exercise', date: yesterday, exerciseType: '游泳', duration: 45, calories: 350 },
+          { id: 11, type: 'diet', date: yesterday, food: '三文鱼', mealTime: '18:00', calories: 380 },
+          { id: 12, type: 'stress', date: yesterday, level: 'low', score: 3 },
+          { id: 13, type: 'sleep', date: d2, time: '23:30', duration: 6.5, quality: 'fair' },
+          { id: 14, type: 'steps', date: d2, steps: 7800 },
+          { id: 15, type: 'water', date: d2, amount: 1500 },
+          { id: 16, type: 'exercise', date: d2, exerciseType: '瑜伽', duration: 40, calories: 180 },
+          { id: 17, type: 'diet', date: d2, food: '牛肉面', mealTime: '12:00', calories: 650 },
+          { id: 18, type: 'stress', date: d2, level: 'high', score: 8 },
+          { id: 19, type: 'sleep', date: d3, time: '22:00', duration: 9, quality: 'good' },
+          { id: 20, type: 'steps', date: d3, steps: 15000 },
+          { id: 21, type: 'water', date: d3, amount: 2500 },
+          { id: 22, type: 'exercise', date: d3, exerciseType: '骑行', duration: 60, calories: 500 },
+          { id: 23, type: 'diet', date: d3, food: '蔬菜沙拉', mealTime: '12:00', calories: 250 },
+          { id: 24, type: 'sleep', date: d4, time: '23:00', duration: 7, quality: 'fair' },
+          { id: 25, type: 'steps', date: d4, steps: 6200 },
+          { id: 26, type: 'water', date: d4, amount: 1100 },
+          { id: 27, type: 'exercise', date: d4, exerciseType: '跑步', duration: 25, calories: 220 },
+          { id: 28, type: 'sleep', date: d5, time: '00:00', duration: 5, quality: 'poor' },
+          { id: 29, type: 'steps', date: d5, steps: 4000 },
+          { id: 30, type: 'water', date: d5, amount: 800 },
+          { id: 31, type: 'exercise', date: d5, exerciseType: '休息', duration: 0, calories: 0 },
+          { id: 32, type: 'sleep', date: d6, time: '22:30', duration: 7.5, quality: 'good' },
+          { id: 33, type: 'steps', date: d6, steps: 9000 },
+          { id: 34, type: 'water', date: d6, amount: 1800 },
+          { id: 35, type: 'diet', date: d6, food: '鸡蛋牛奶', mealTime: '08:00', calories: 300 },
+        ],
+        nextId: 36,
+      };
+    }
+
+    // ==================== RECORD FORM COMPONENTS ====================
+    const SleepForm = {
+      props: ['editing'],
+      emits: ['saved', 'cancel'],
+      setup(props, { emit }) {
+        const form = reactive({
+          date: props.editing ? props.editing.date : new Date().toISOString().split('T')[0],
+          time: props.editing ? props.editing.time : '23:00',
+          duration: props.editing ? props.editing.duration : null,
+          quality: props.editing ? props.editing.quality : 'good',
+        });
+        const save = () => {
+          if (!form.duration) return;
+          emit('saved', { type: 'sleep', data: { ...form } });
+        };
+        return { form, save };
+      },
+      template: '#sleep-form-tpl'
+    };
+
+    const StepsForm = {
+      props: ['editing'],
+      emits: ['saved', 'cancel'],
+      setup(props, { emit }) {
+        const form = reactive({
+          date: props.editing ? props.editing.date : new Date().toISOString().split('T')[0],
+          steps: props.editing ? props.editing.steps : null,
+        });
+        const save = () => {
+          if (!form.steps) return;
+          emit('saved', { type: 'steps', data: { ...form } });
+        };
+        return { form, save };
+      },
+      template: '#steps-form-tpl'
+    };
+
+    const WaterForm = {
+      props: ['editing'],
+      emits: ['saved', 'cancel'],
+      setup(props, { emit }) {
+        const form = reactive({
+          date: props.editing ? props.editing.date : new Date().toISOString().split('T')[0],
+          amount: props.editing ? props.editing.amount : null,
+        });
+        const save = () => {
+          if (!form.amount) return;
+          emit('saved', { type: 'water', data: { ...form } });
+        };
+        const quickAdd = (ml) => { form.amount = (form.amount || 0) + ml; };
+        return { form, save, quickAdd };
+      },
+      template: '#water-form-tpl'
+    };
+
+    const ExerciseForm = {
+      props: ['editing'],
+      emits: ['saved', 'cancel'],
+      setup(props, { emit }) {
+        const form = reactive({
+          date: props.editing ? props.editing.date : new Date().toISOString().split('T')[0],
+          exerciseType: props.editing ? props.editing.exerciseType : '',
+          duration: props.editing ? props.editing.duration : null,
+          calories: props.editing ? props.editing.calories : null,
+        });
+        const save = () => {
+          if (!form.exerciseType || !form.duration) return;
+          emit('saved', { type: 'exercise', data: { ...form } });
+        };
+        return { form, save };
+      },
+      template: '#exercise-form-tpl'
+    };
+
+    const DietForm = {
+      props: ['editing'],
+      emits: ['saved', 'cancel'],
+      setup(props, { emit }) {
+        const form = reactive({
+          date: props.editing ? props.editing.date : new Date().toISOString().split('T')[0],
+          food: props.editing ? props.editing.food : '',
+          mealTime: props.editing ? props.editing.mealTime : '',
+          calories: props.editing ? props.editing.calories : null,
+        });
+        const save = () => {
+          if (!form.food || !form.mealTime) return;
+          emit('saved', { type: 'diet', data: { ...form } });
+        };
+        return { form, save };
+      },
+      template: '#diet-form-tpl'
+    };
+
+    const StressForm = {
+      props: ['editing'],
+      emits: ['saved', 'cancel'],
+      setup(props, { emit }) {
+        const form = reactive({
+          date: props.editing ? props.editing.date : new Date().toISOString().split('T')[0],
+          level: props.editing ? props.editing.level : 'low',
+          score: props.editing ? props.editing.score : 2,
+        });
+        const select = (level, score) => { form.level = level; form.score = score; };
+        const save = () => emit('saved', { type: 'stress', data: { ...form } });
+        const levels = [
+          { key: 'low', label: '低', emoji: '😊', score: 2, color: '#42A5F5' },
+          { key: 'medium', label: '中', emoji: '😐', score: 5, color: '#FF9800' },
+          { key: 'high', label: '高', emoji: '😫', score: 8, color: '#f44336' },
+        ];
+        return { form, save, select, levels };
+      },
+      template: '#stress-form-tpl'
+    };
+
+    const CycleForm = {
+      props: ['editing'],
+      emits: ['saved', 'cancel'],
+      setup(props, { emit }) {
+        const form = reactive({
+          startDate: props.editing ? props.editing.startDate : '',
+          endDate: props.editing ? props.editing.endDate : '',
+          cycleLength: props.editing ? props.editing.cycleLength : null,
+          notes: props.editing ? props.editing.notes : '',
+        });
+        const save = () => {
+          if (!form.startDate) return;
+          emit('saved', { type: 'cycle', data: { ...form } });
+        };
+        return { form, save };
+      },
+      template: '#cycle-form-tpl'
+    };
+
+    // ==================== MAIN APP ====================
+    const app = createApp({
+      components: { SleepForm, StepsForm, WaterForm, ExerciseForm, DietForm, StressForm, CycleForm },
+
+      setup() {
+        // ---- State ----
+        const isLoggedIn = ref(false);
+        const loginMode = ref('login');
+        const loginForm = reactive({ email: '', password: '' });
+        const registerForm = reactive({ nickname: '', email: '', password: '', confirmPassword: '' });
+        const sidebarOpen = ref(false);
+        const currentRoute = ref('dashboard');
+        const toasts = ref([]);
+        const appData = ref(getDefaultData());
+        const filterDate = ref('');
+        const recordTab = ref('sleep');
+        const editingRecord = ref(null);
+        const quickModal = ref(null);
+        const analysisPeriod = ref('week');
+        const exportContent = ref(null);
+        const showExportPreview = ref(false);
+
+        // Chat
+        const chatInput = ref('');
+        const chatMessages = ref([
+          { role: 'assistant', content: '你好！我是你的AI健康助手 🤖<br>你可以问我关于健康数据的问题，例如：<br>• "我这周平均睡眠多久？"<br>• "我的饮水达标了吗？"<br>• "给我一些健康建议"<br><br>请记住，我提供的只是一般性健康建议，不能替代专业医生诊断。' },
+          { role: 'user', content: '最近饮水是否达标？' },
+          { role: 'assistant', content: '根据过去7天的记录来看：<br><br>💧 你的<strong>日均饮水为 1,557ml</strong>，饮水目标为 <strong>2,000ml/天</strong>。<br><br>📊 7天中你<strong>有 2 天</strong>达到了饮水目标。<br><br>⚠️ 饮水达标天数偏少，距离目标还有差距。建议：<br>• 随身携带水杯，随时随地补水<br>• 设置手机定时提醒（每1-2小时喝一次）<br>• 晨起一杯温水，唤醒身体代谢<br>• 运动前后注意补充水分<br><br>坚持几天就能看到改善，加油！💪' }
+        ]);
+        const chatLoading = ref(false);
+        const chatMessagesEl = ref(null);
+
+        // ---- Computed ----
+        const userProfile = computed(() => appData.value.userProfile);
+        const userGoals = computed(() => appData.value.userGoals);
+        const allRecords = computed(() => appData.value.records);
+
+        const todayDate = computed(() => {
+          return new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+        });
+
+        const todayStr = computed(() => new Date().toISOString().split('T')[0]);
+
+        const todayRecords = computed(() => {
+          return allRecords.value.filter(r => r.date === todayStr.value);
+        });
+
+        const todayStats = computed(() => {
+          const records = todayRecords.value;
+          let sleep = 0, steps = 0, water = 0, calories = 0, exerciseMin = 0;
+          records.forEach(r => {
+            if (r.type === 'sleep') sleep = r.duration || 0;
+            if (r.type === 'steps') steps = r.steps || 0;
+            if (r.type === 'water') water = r.amount || 0;
+            if (r.type === 'exercise') { exerciseMin += (r.duration || 0); calories += (r.calories || 0); }
+            if (r.type === 'diet') calories += (r.calories || 0);
+          });
+          return { sleep, steps, water, calories, exerciseMin };
+        });
+
+        const filteredRecords = computed(() => {
+          let records = [...allRecords.value];
+          // Filter by the active tab type
+          if (currentRoute.value === 'record') {
+            records = records.filter(r => r.type === recordTab.value);
+          }
+          if (filterDate.value) {
+            records = records.filter(r => r.date === filterDate.value);
+          }
+          return records.sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+        });
+
+        const weeklySummary = computed(() => {
+          const weekRecords = getRecordsInPeriod(7);
+          const totalSleep = sumField(weekRecords, 'sleep', 'duration');
+          const avgSteps = avgField(weekRecords, 'steps', 'steps');
+          const totalWater = sumField(weekRecords, 'water', 'amount');
+          const waterGoalDays = countFieldMet(weekRecords, 'water', 'amount', userGoals.value.water);
+          const daysWithData = new Set(weekRecords.map(r => r.date)).size || 7;
+
+          return `<strong>📊 过去7天数据</strong><br><br>
+            • 平均每日睡眠：<strong>${(totalSleep / daysWithData).toFixed(1)} 小时</strong><br>
+            • 平均每日步数：<strong>${Math.round(avgSteps).toLocaleString()} 步</strong><br>
+            • 平均每日饮水：<strong>${Math.round(totalWater / daysWithData)} ml</strong><br>
+            • 饮水达标天数：<strong>${waterGoalDays} / ${daysWithData}</strong> 天<br>
+            • 共记录了 <strong>${weekRecords.length}</strong> 条健康数据<br><br>
+            ${waterGoalDays >= 5 ? '🎉 太棒了！本周饮水习惯良好，请继续保持！' : '💡 提示：本周饮水达标天数较少，记得多喝水哦！'}
+            ${avgSteps < 8000 ? '<br>💡 步数方面可以再努力一下，每天8000-10000步是不错的目标。' : ''}`;
+        });
+
+        const analysisPeriodName = computed(() => {
+          return { week: '本周', month: '本月', '3month': '近三个月' }[analysisPeriod.value] || '';
+        });
+
+        const analysisStats = computed(() => {
+          const days = analysisPeriod.value === 'week' ? 7 : analysisPeriod.value === 'month' ? 30 : 90;
+          const records = getRecordsInPeriod(days);
+          const dates = [...new Set(records.map(r => r.date))];
+          const dayCount = dates.length || 1;
+
+          return {
+            avgSleep: (sumField(records, 'sleep', 'duration') / dayCount).toFixed(1),
+            avgSteps: Math.round(avgField(records, 'steps', 'steps')),
+            avgWater: Math.round(sumField(records, 'water', 'amount') / dayCount),
+            avgExercise: Math.round(sumField(records, 'exercise', 'duration') / dayCount),
+          };
+        });
+
+        const analysisSummary = computed(() => {
+          const s = analysisStats.value;
+          const goals = userGoals.value;
+          let html = '';
+          html += `• 日均睡眠 ${s.avgSleep}h ` + (parseFloat(s.avgSleep) >= goals.sleep ? '✅ 达标' : '⚠️ 未达标') + '<br>';
+          html += `• 日均步数 ${Number(s.avgSteps).toLocaleString()} ` + (s.avgSteps >= goals.steps ? '✅ 达标' : '⚠️ 未达标') + '<br>';
+          html += `• 日均饮水 ${s.avgWater}ml ` + (s.avgWater >= goals.water ? '✅ 达标' : '⚠️ 未达标') + '<br>';
+          html += `• 日均运动 ${s.avgExercise}min ` + (s.avgExercise >= goals.exercise ? '✅ 达标' : '⚠️ 未达标') + '<br>';
+          return html;
+        });
+
+        // ---- Helpers ----
+        function getRecordsInPeriod(days) {
+          const now = new Date();
+          const start = new Date(now - (days - 1) * 86400000);
+          return allRecords.value.filter(r => {
+            const d = new Date(r.date);
+            return d >= start && d <= now;
+          });
+        }
+
+        function sumField(records, type, field) {
+          return records.filter(r => r.type === type).reduce((s, r) => s + (r[field] || 0), 0);
+        }
+
+        function avgField(records, type, field) {
+          const items = records.filter(r => r.type === type);
+          if (items.length === 0) return 0;
+          const dates = [...new Set(items.map(r => r.date))];
+          return items.reduce((s, r) => s + (r[field] || 0), 0) / dates.length;
+        }
+
+        function countFieldMet(records, type, field, goal) {
+          const byDate = {};
+          records.filter(r => r.type === type).forEach(r => {
+            byDate[r.date] = (byDate[r.date] || 0) + (r[field] || 0);
+          });
+          return Object.values(byDate).filter(v => v >= goal).length;
+        }
+
+        function getDaysInPeriod(days) {
+          const dates = [];
+          for (let i = days - 1; i >= 0; i--) {
+            dates.push(new Date(Date.now() - i * 86400000).toISOString().split('T')[0]);
+          }
+          return dates;
+        }
+
+        function aggByDate(records, type, field) {
+          const dates = getDaysInPeriod(analysisPeriod.value === 'week' ? 7 : analysisPeriod.value === 'month' ? 30 : 90);
+          const byDate = {};
+          records.filter(r => r.type === type).forEach(r => {
+            byDate[r.date] = (byDate[r.date] || 0) + (r[field] || 0);
+          });
+          return dates.map(d => byDate[d] || 0);
+        }
+
+        // ---- Actions ----
+        function showToast(msg, type = 'success') {
+          const id = Date.now();
+          toasts.value.push({ id, msg, type });
+          setTimeout(() => {
+            toasts.value = toasts.value.filter(t => t.id !== id);
+          }, 3000);
+        }
+
+        function persist() {
+          saveData(toRaw(appData.value));
+        }
+
+        function demoLogin() {
+          isLoggedIn.value = true;
+          // Load saved data or use defaults
+          const saved = loadData();
+          if (saved) appData.value = saved;
+          else persist();
+          showToast('欢迎回来！演示数据已就绪', 'info');
+        }
+
+        function doLogin() {
+          if (!loginForm.email || !loginForm.password) {
+            showToast('请输入邮箱和密码', 'error');
+            return;
+          }
+          isLoggedIn.value = true;
+          const saved = loadData();
+          if (saved) appData.value = saved;
+          else persist();
+          showToast('登录成功！', 'success');
+        }
+
+        function doRegister() {
+          if (!registerForm.nickname || !registerForm.email || !registerForm.password) {
+            showToast('请填写所有必填项', 'error');
+            return;
+          }
+          if (registerForm.password !== registerForm.confirmPassword) {
+            showToast('两次输入的密码不一致', 'error');
+            return;
+          }
+          if (registerForm.password.length < 6) {
+            showToast('密码长度至少6位', 'error');
+            return;
+          }
+          appData.value.userProfile.nickname = registerForm.nickname;
+          isLoggedIn.value = true;
+          persist();
+          showToast('注册成功！欢迎加入', 'success');
+        }
+
+        function doLogout() {
+          if (confirm('确定要退出登录吗？')) {
+            isLoggedIn.value = false;
+            loginForm.email = '';
+            loginForm.password = '';
+          }
+        }
+
+        function navigate(route) {
+          currentRoute.value = route;
+          if (route === 'analysis') nextTick(() => renderCharts());
+        }
+
+        function recordTypeIcon(type) {
+          const map = { sleep: '💤', steps: '🚶', water: '💧', exercise: '🏃', diet: '🍽️', stress: '🧠', cycle: '📅' };
+          return map[type] || '📋';
+        }
+
+        function recordTypeName(type) {
+          const map = { sleep: '睡眠', steps: '步数', water: '饮水', exercise: '运动', diet: '饮食', stress: '压力', cycle: '生理周期' };
+          return map[type] || type;
+        }
+
+        function recordSummary(r) {
+          switch (r.type) {
+            case 'sleep': return `${r.duration}h · ${r.quality === 'good' ? '好' : r.quality === 'fair' ? '一般' : '差'}`;
+            case 'steps': return `${(r.steps || 0).toLocaleString()} 步`;
+            case 'water': return `${r.amount || 0} ml`;
+            case 'exercise': return `${r.exerciseType || ''} · ${r.duration || 0}min · ${r.calories || 0}kcal`;
+            case 'diet': return `${r.food || ''} · ${r.calories || 0}kcal`;
+            case 'stress': return `${r.level === 'low' ? '😊 低' : r.level === 'medium' ? '😐 中' : '😫 高'} · 评分${r.score || 0}`;
+            case 'cycle': return `${r.startDate || ''}~${r.endDate || ''} · ${r.cycleLength || '?'}天`;
+            default: return '';
+          }
+        }
+
+        function onRecordSaved(payload) {
+          if (editingRecord.value) {
+            const idx = appData.value.records.findIndex(r => r.id === editingRecord.value.id);
+            if (idx >= 0) {
+              appData.value.records[idx] = { ...appData.value.records[idx], ...payload.data, type: payload.type };
+            }
+            editingRecord.value = null;
+            showToast('记录已更新', 'success');
+          } else {
+            appData.value.records.push({
+              id: appData.value.nextId++,
+              type: payload.type,
+              ...payload.data,
+            });
+            showToast('记录已添加', 'success');
+          }
+          persist();
+        }
+
+        function onQuickSaved(payload) {
+          appData.value.records.push({
+            id: appData.value.nextId++,
+            type: payload.type,
+            ...payload.data,
+          });
+          quickModal.value = null;
+          persist();
+          showToast('快速记录成功！', 'success');
+        }
+
+        function quickRecord(type) {
+          quickModal.value = type;
+        }
+
+        function editRecord(r) {
+          editingRecord.value = r;
+          recordTab.value = r.type;
+        }
+
+        function deleteRecord(id) {
+          if (!confirm('确定要删除这条记录吗？此操作不可撤销。')) return;
+          appData.value.records = appData.value.records.filter(r => r.id !== id);
+          if (editingRecord.value && editingRecord.value.id === id) editingRecord.value = null;
+          persist();
+          showToast('记录已删除', 'info');
+        }
+
+        function saveProfile() {
+          persist();
+          showToast('个人资料已保存', 'success');
+        }
+
+        function saveGoals() {
+          persist();
+          showToast('健康目标已保存', 'success');
+        }
+
+        function exportData() {
+          const exportObj = {
+            exportTime: new Date().toISOString(),
+            profile: toRaw(appData.value.userProfile),
+            goals: toRaw(appData.value.userGoals),
+            records: toRaw(appData.value.records),
+          };
+          const json = JSON.stringify(exportObj, null, 2);
+          exportContent.value = json;
+          showExportPreview.value = true;
+          const blob = new Blob([json], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `健康数据导出_${new Date().toISOString().split('T')[0]}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('数据导出成功！', 'success');
+        }
+
+        function confirmClearData() {
+          if (!confirm('确定要清除所有健康数据吗？此操作不可撤销！')) return;
+          if (!confirm('再次确认：这将删除所有记录、个人资料和设置。')) return;
+          appData.value = getDefaultData();
+          persist();
+          exportContent.value = null;
+          showExportPreview.value = false;
+          showToast('所有数据已清除', 'info');
+        }
+
+        // ---- Chat ----
+        function sendChat() {
+          const text = chatInput.value.trim();
+          if (!text) return;
+          chatMessages.value.push({ role: 'user', content: text });
+          chatInput.value = '';
+          chatLoading.value = true;
+          nextTick(() => scrollChat());
+
+          setTimeout(() => {
+            const response = generateAIResponse(text);
+            chatMessages.value.push({ role: 'assistant', content: response });
+            chatLoading.value = false;
+            nextTick(() => scrollChat());
+          }, 800 + Math.random() * 1200);
+        }
+
+        function askQuickQ(q) {
+          chatInput.value = q;
+          sendChat();
+        }
+
+        function scrollChat() {
+          const el = document.querySelector('.chat-messages');
+          if (el) el.scrollTop = el.scrollHeight;
+        }
+
+        function generateAIResponse(question) {
+          const q = question.toLowerCase();
+          const weekRecords = getRecordsInPeriod(7);
+          const dates = [...new Set(weekRecords.map(r => r.date))];
+          const dayCount = dates.length || 7;
+          const avgSleep = (sumField(weekRecords, 'sleep', 'duration') / dayCount).toFixed(1);
+          const avgSteps = Math.round(avgField(weekRecords, 'steps', 'steps'));
+          const avgWater = Math.round(sumField(weekRecords, 'water', 'amount') / dayCount);
+          const waterGoalDays = countFieldMet(weekRecords, 'water', 'amount', userGoals.value.water);
+
+          if (q.includes('睡眠') && (q.includes('平均') || q.includes('多久'))) {
+            return `根据过去7天的记录，你的<strong>日均睡眠时长为 ${avgSleep} 小时</strong>。<br><br>${
+              parseFloat(avgSleep) >= 8 ? '你的睡眠时长很不错，继续保持规律作息！🌙' :
+              parseFloat(avgSleep) >= 6 ? '睡眠时长尚可，建议争取达到7-8小时，对健康更有益。' :
+              '⚠️ 你的睡眠时长偏短，长期睡眠不足可能影响免疫力、记忆力和情绪。建议每天保证7-8小时睡眠。'
+            }`;
+          }
+
+          if (q.includes('饮水') || q.includes('达标')) {
+            return `在过去7天中，你<strong>有 ${waterGoalDays} 天</strong>达到了每日饮水目标（${userGoals.value.water}ml），日均饮水 ${avgWater}ml。<br><br>${
+              waterGoalDays >= 5 ? '🎉 饮水习惯良好！保持充足水分摄入对身体代谢和皮肤健康都很重要。' :
+              '💧 饮水达标天数偏少。建议随身携带水杯，设置定时提醒，每天保证足够的水分摄入。'
+            }`;
+          }
+
+          if (q.includes('建议') || q.includes('怎么') || q.includes('如何')) {
+            if (q.includes('睡眠')) {
+              return '改善睡眠质量的建议：<br><br>🌙 <strong>保持规律作息</strong>：每天固定时间上床和起床，即使是周末也尽量一致。<br><br>📵 <strong>睡前远离屏幕</strong>：睡前1小时减少手机、电脑使用，蓝光会抑制褪黑素分泌。<br><br>🏃 <strong>白天适量运动</strong>：规律运动有助睡眠，但避免睡前3小时内剧烈运动。<br><br>☕ <strong>控制咖啡因</strong>：下午2点后避免咖啡、浓茶。<br><br>🛏️ <strong>营造舒适环境</strong>：保持卧室安静、黑暗、凉爽（18-22°C为宜）。';
+            }
+            return '以下是一些通用健康建议：<br><br>🥗 <strong>均衡饮食</strong>：多吃蔬果、全谷物和优质蛋白，减少加工食品。<br><br>🏃 <strong>规律运动</strong>：每周至少150分钟中等强度有氧运动。<br><br>💧 <strong>充足饮水</strong>：每天1.5-2升水。<br><br>😴 <strong>保证睡眠</strong>：成人每晚7-9小时。<br><br>🧘 <strong>管理压力</strong>：尝试冥想、深呼吸或与朋友交流。<br><br>⚕️ <em>如有具体健康问题，请咨询专业医生。</em>';
+          }
+
+          // Default response
+          const defaultResponses = [
+            '根据你的健康数据，我建议你持续关注自己的睡眠和运动情况。规律的生活习惯是健康的基础。你有什么具体想了解的吗？',
+            '感谢你的提问！作为你的AI健康助手，我可以帮你分析睡眠、运动、饮食等数据。试试问我"本周睡眠怎么样"或"我的运动达标了吗"？',
+            '健康管理是一个长期的过程。从你的数据来看，坚持记录是非常好的习惯。需要我帮你分析哪方面的数据呢？',
+          ];
+          return defaultResponses[Math.floor(Math.random() * defaultResponses.length)] + '<br><br><em>⚕️ 提示：本系统仅提供一般健康管理建议，不能替代专业医生诊断。</em>';
+        }
+
+        function showNotifications() {
+          showToast('暂无新通知', 'info');
+        }
+
+        // Charts
+        let chartInstances = {};
+        function renderCharts() {
+          nextTick(() => {
+            Object.values(chartInstances).forEach(c => c.destroy());
+            chartInstances = {};
+
+            const days = analysisPeriod.value === 'week' ? 7 : analysisPeriod.value === 'month' ? 30 : 90;
+            const labels = getDaysInPeriod(days).map(d => d.slice(5)); // MM-DD
+            const sleepData = aggByDate(allRecords.value, 'sleep', 'duration');
+            const stepsData = aggByDate(allRecords.value, 'steps', 'steps');
+            const waterData = aggByDate(allRecords.value, 'water', 'amount');
+            const caloriesData = aggByDate(allRecords.value, 'diet', 'calories');
+            // Also include exercise calories
+            const exerciseCal = aggByDate(allRecords.value, 'exercise', 'calories');
+            const totalCalories = caloriesData.map((v, i) => v + (exerciseCal[i] || 0));
+
+            const chartConfigs = {
+              chartSleep: { el: 'chartSleep', data: sleepData, label: '睡眠时长 (h)', color: '#9C27B0', bg: 'rgba(156,39,176,0.1)' },
+              chartSteps: { el: 'chartSteps', data: stepsData, label: '步数', color: '#2196F3', bg: 'rgba(33,150,243,0.1)' },
+              chartWater: { el: 'chartWater', data: waterData, label: '饮水 (ml)', color: '#009688', bg: 'rgba(0,150,136,0.1)' },
+              chartCalories: { el: 'chartCalories', data: totalCalories, label: '热量 (kcal)', color: '#f44336', bg: 'rgba(244,67,54,0.1)' },
+            };
+
+            Object.values(chartConfigs).forEach(cfg => {
+              const canvas = document.getElementById(cfg.el);
+              if (!canvas) return;
+              chartInstances[cfg.el] = new Chart(canvas, {
+                type: 'line',
+                data: {
+                  labels,
+                  datasets: [{
+                    label: cfg.label,
+                    data: cfg.data,
+                    borderColor: cfg.color,
+                    backgroundColor: cfg.bg,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: cfg.color,
+                    borderWidth: 2,
+                  }],
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: false },
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      grid: { color: '#f0f0f0' },
+                    },
+                    x: {
+                      grid: { display: false },
+                    },
+                  },
+                },
+              });
+            });
+          });
+        }
+
+        // Watch for analysis changes
+        watch([analysisPeriod, currentRoute], ([period, route]) => {
+          if (route === 'analysis') renderCharts();
+        });
+
+        onMounted(() => {
+          // Check for saved login state (not really, just for demo)
+        });
+
+        return {
+          isLoggedIn, loginMode, loginForm, registerForm,
+          sidebarOpen, currentRoute, toasts,
+          userProfile, userGoals, allRecords,
+          todayDate, todayStr, todayRecords, todayStats,
+          filterDate, recordTab, editingRecord, quickModal,
+          filteredRecords, weeklySummary,
+          analysisPeriod, analysisPeriodName, analysisStats, analysisSummary,
+          exportContent, showExportPreview,
+          chatInput, chatMessages, chatLoading, chatMessagesEl,
+          demoLogin, doLogin, doRegister, doLogout, navigate,
+          recordTypeIcon, recordTypeName, recordSummary,
+          onRecordSaved, onQuickSaved, quickRecord, editRecord, deleteRecord,
+          saveProfile, saveGoals, exportData, confirmClearData,
+          sendChat, askQuickQ, showNotifications,
+        };
+      }
+    });
+
+    app.mount('#app');
+  </script>
+</body>
+</html>

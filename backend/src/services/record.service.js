@@ -1,0 +1,103 @@
+const pool = require('../config/db');
+const redis = require('../config/redis');
+
+// Factory for record CRUD operations on a given table.
+// Each table must have: id, user_id, record_date
+function makeRecordService(tableName, dateField = 'record_date') {
+  return {
+    async create(userId, data) {
+      const fields = Object.keys(data);
+      const placeholders = fields.map(() => '?').join(', ');
+      const values = fields.map((k) => data[k]);
+
+      const [result] = await pool.query(
+        `INSERT INTO ${tableName} (user_id, ${fields.join(', ')}) VALUES (?, ${placeholders})`,
+        [userId, ...values]
+      );
+
+      const [rows] = await pool.query(`SELECT * FROM ${tableName} WHERE id = ?`, [result.insertId]);
+      this._invalidateCache(userId);
+      return rows[0];
+    },
+
+    async query(userId, { date, from, to, limit = 30, offset = 0 }) {
+      let sql = `SELECT * FROM ${tableName} WHERE user_id = ?`;
+      const values = [userId];
+
+      if (date) {
+        sql += ` AND ${dateField} = ?`;
+        values.push(date);
+      }
+      if (from) {
+        sql += ` AND ${dateField} >= ?`;
+        values.push(from);
+      }
+      if (to) {
+        sql += ` AND ${dateField} <= ?`;
+        values.push(to);
+      }
+
+      sql += ` ORDER BY ${dateField} DESC, id DESC LIMIT ? OFFSET ?`;
+      values.push(parseInt(limit), parseInt(offset));
+
+      const [rows] = await pool.query(sql, values);
+      return rows;
+    },
+
+    async getById(userId, id) {
+      const [rows] = await pool.query(`SELECT * FROM ${tableName} WHERE id = ? AND user_id = ?`, [id, userId]);
+      if (rows.length === 0) {
+        throw Object.assign(new Error('记录不存在'), { code: 'NOT_FOUND', status: 404 });
+      }
+      return rows[0];
+    },
+
+    async update(userId, id, data) {
+      const [existing] = await pool.query(`SELECT id FROM ${tableName} WHERE id = ? AND user_id = ?`, [id, userId]);
+      if (existing.length === 0) {
+        throw Object.assign(new Error('记录不存在'), { code: 'NOT_FOUND', status: 404 });
+      }
+
+      const sets = [];
+      const values = [];
+      for (const [key, value] of Object.entries(data)) {
+        sets.push(`${key} = ?`);
+        values.push(value);
+      }
+
+      if (sets.length === 0) {
+        return this.getById(userId, id);
+      }
+
+      values.push(id);
+      await pool.query(`UPDATE ${tableName} SET ${sets.join(', ')} WHERE id = ?`, values);
+
+      this._invalidateCache(userId);
+      return this.getById(userId, id);
+    },
+
+    async delete(userId, id) {
+      const [existing] = await pool.query(`SELECT id FROM ${tableName} WHERE id = ? AND user_id = ?`, [id, userId]);
+      if (existing.length === 0) {
+        throw Object.assign(new Error('记录不存在'), { code: 'NOT_FOUND', status: 404 });
+      }
+
+      await pool.query(`DELETE FROM ${tableName} WHERE id = ?`, [id]);
+      this._invalidateCache(userId);
+    },
+
+    async _invalidateCache(userId) {
+      // Invalidate daily stats and summary caches for this user
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        await redis.del(`daily_stats:${userId}:${today}`);
+        const summaryKeys = await redis.keys(`summary:${userId}:*`);
+        if (summaryKeys.length > 0) await redis.del(...summaryKeys);
+      } catch (_) {
+        // Redis might not be available; ignore
+      }
+    },
+  };
+}
+
+module.exports = { makeRecordService };
