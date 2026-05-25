@@ -1,5 +1,10 @@
 <template>
-  <router-view />
+  <!-- keepAlive缓存的路由视图 -->
+  <router-view v-slot="{ Component }">
+    <keep-alive>
+      <component :is="Component" />
+    </keep-alive>
+  </router-view>
 </template>
 
 <script setup>

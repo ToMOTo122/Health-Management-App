@@ -1,3 +1,4 @@
+/* wcw5.25修改-仪表盘测试与优化:只统计有记录的天数，不计入没有记录的日子 */
 const pool = require('../config/db');
 const redis = require('../config/redis');
 
@@ -188,6 +189,134 @@ const analysisService = {
 • 共记录 ${summary.total_records} 条健康数据`,
       summary,
     };
+  },
+
+  // 新仪表盘聚合接口
+  async getDashboard(userId) {
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+    // 并行获取今日昨日、本周数据
+    const [todayStats, yesterdayStats, weekStats] = await Promise.all([
+      this._computeTodayStats(userId, today),
+      this._computeTodayStats(userId, yesterday),
+      this.getWeekStats(userId),
+    ]);
+
+    // 7天序列数据
+    const series = await this.get7DaySeries(userId);
+
+    return {
+      today: todayStats,
+      yesterday: yesterdayStats,
+      series,
+      week: weekStats,
+    };
+  },
+
+  // 获取本周统计数据（带评分）
+  // wcw5.25修改-只统计有记录的天数，不计入没有记录的日子
+  async getWeekStats(userId) {
+    const fromDate = new Date();
+    fromDate.setDate(fromDate.getDate() - 7);
+    const from = fromDate.toISOString().split('T')[0];
+
+    // sleep: 只查有记录的天数的平均
+    const [sleepRows] = await pool.query(
+      'SELECT COALESCE(AVG(duration_h), 0) as avg, COUNT(*) as cnt FROM sleep_records WHERE user_id = ? AND record_date >= ?',
+      [userId, from]
+    );
+    // steps: 只查有记录的天数的平均
+    const [stepsRows] = await pool.query(
+      'SELECT COALESCE(AVG(steps), 0) as avg, COUNT(*) as cnt FROM steps_records WHERE user_id = ? AND record_date >= ?',
+      [userId, from]
+    );
+    // water: 只查有记录的天数的总和
+    const [waterRows] = await pool.query(
+      'SELECT COALESCE(SUM(amount_ml), 0) as total, COUNT(DISTINCT record_date) as days FROM water_records WHERE user_id = ? AND record_date >= ?',
+      [userId, from]
+    );
+    // exercise: 只查有记录的天数的平均
+    const [exRows] = await pool.query(
+      'SELECT COALESCE(AVG(duration_min), 0) as avg, COUNT(*) as cnt FROM exercise_records WHERE user_id = ? AND record_date >= ?',
+      [userId, from]
+    );
+
+    const [goals] = await pool.query('SELECT * FROM health_goals WHERE user_id = ?', [userId]);
+    const g = goals[0] || { sleep_hours: 8, steps_daily: 10000, water_ml: 2000, exercise_min: 30 };
+
+    // 只有有记录的天数才计算平均，没有记录则按实际记录天数计算
+    const avgSleep = sleepRows[0].cnt > 0 ? Math.round(sleepRows[0].avg * 10) / 10 : 0;
+    const avgSteps = stepsRows[0].cnt > 0 ? Math.round(stepsRows[0].avg) : 0;
+    const avgWater = waterRows[0].days > 0 ? Math.round(waterRows[0].total / waterRows[0].days) : 0;
+    const avgExercise = exRows[0].cnt > 0 ? Math.round(exRows[0].avg) : 0;
+
+    // 有记录天数
+    const recordDays = Math.max(sleepRows[0].cnt, stepsRows[0].cnt, waterRows[0].days, exRows[0].cnt);
+
+    // 计算各指标达标率（有记录时才计算，否则按0%)
+    const sleepPct = recordDays > 0 ? Math.min(100, Math.round((avgSleep / g.sleep_hours) * 100)) : 0;
+    const stepsPct = recordDays > 0 ? Math.min(100, Math.round((avgSteps / g.steps_daily) * 100)) : 0;
+    const waterPct = recordDays > 0 ? Math.min(100, Math.round((avgWater / g.water_ml) * 100)) : 0;
+    const exercisePct = recordDays > 0 ? Math.min(100, Math.round((avgExercise / g.exercise_min) * 100)) : 0;
+
+    // 只有当有记录时才计算总分，否则为0
+    const score = recordDays > 0 ? Math.round((sleepPct + stepsPct + waterPct + exercisePct) / 4) : 0;
+
+    let grade = '需努力';
+    let advice = '还没有本周健康记录，开始记录数据来获得健康评分吧';
+    if (score >= 85) { grade = '优秀'; advice = '本周各项指标都很均衡，保持现在的生活节奏即可。'; }
+    else if (score >= 70) { grade = '良好'; advice = '整体表现不错，找出进度最低的一项重点补齐就能更进一步。'; }
+    else if (score >= 50) { grade = '及格'; advice = '基础打得不错，建议优先提升步数与运动时长。'; }
+    else if (recordDays > 0) { advice = '本周多项指标偏低，建议先从规律作息和每日饮水做起。'; }
+
+    return {
+      avg_sleep: avgSleep,
+      avg_steps: avgSteps,
+      avg_water: avgWater,
+      avg_exercise: avgExercise,
+      score,
+      grade,
+      advice,
+      goals: g,
+      breakdown: [
+        { name: '睡眠', pct: sleepPct, value: avgSleep > 0 ? avgSleep.toFixed(1) : '-', target: g.sleep_hours, unit: 'h' },
+        { name: '步数', pct: stepsPct, value: avgSteps > 0 ? Math.round(avgSteps).toLocaleString() : '-', target: g.steps_daily, unit: '步' },
+        { name: '饮水', pct: waterPct, value: avgWater > 0 ? Math.round(avgWater) : '-', target: g.water_ml, unit: 'ml' },
+        { name: '运动', pct: exercisePct, value: avgExercise > 0 ? Math.round(avgExercise) : '-', target: g.exercise_min, unit: 'min' },
+      ],
+    };
+  },
+
+  // 获取7天序列数据
+  async get7DaySeries(userId) {
+    const days = 7;
+    const result = { sleep: [], steps: [], water: [] };
+
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+
+      const [sleepRows] = await pool.query(
+        'SELECT COALESCE(SUM(duration_h), 0) as v FROM sleep_records WHERE user_id = ? AND record_date = ?',
+        [userId, dateStr]
+      );
+      const [stepsRows] = await pool.query(
+        'SELECT COALESCE(SUM(steps), 0) as v FROM steps_records WHERE user_id = ? AND record_date = ?',
+        [userId, dateStr]
+      );
+      const [waterRows] = await pool.query(
+        'SELECT COALESCE(SUM(amount_ml), 0) as v FROM water_records WHERE user_id = ? AND record_date = ?',
+        [userId, dateStr]
+      );
+
+      result.sleep.push(Math.round((sleepRows[0].v || 0) * 10) / 10);
+      result.steps.push(Math.round(stepsRows[0].v || 0));
+      result.water.push(Math.round(waterRows[0].v || 0));
+    }
+
+    return result;
   },
 };
 
