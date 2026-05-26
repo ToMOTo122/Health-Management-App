@@ -1,1 +1,0 @@
-import{r as i}from"./index-C3jG8Qnq.js";const t=i([]);let r=0;function l(){function e(s,u="info",n=3e3){const o=r++;t.value.push({id:o,message:s,type:u}),setTimeout(()=>{t.value=t.value.filter(a=>a.id!==o)},n)}return{toasts:t,showToast:e}}export{l as u};

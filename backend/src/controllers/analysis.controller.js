@@ -1,3 +1,4 @@
+/* wcw5.25修改-仪表盘测试与优化 */
 const analysisService = require('../services/analysis.service');
 const { success, error } = require('../utils/helpers');
 
@@ -55,6 +56,15 @@ const analysisController = {
     try {
       const report = await analysisService.getWeeklyReport(req.user.id);
       return success(res, report);
+    } catch (err) {
+      throw err;
+    }
+  },
+
+  async dashboard(req, res) {
+    try {
+      const data = await analysisService.getDashboard(req.user.id);
+      return success(res, data);
     } catch (err) {
       throw err;
     }

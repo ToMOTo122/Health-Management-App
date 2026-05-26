@@ -1,1 +1,0 @@
-import{q as a}from"./index-C3jG8Qnq.js";const r={today:()=>a.get("/analysis/today"),summary:s=>a.get("/analysis/summary",{params:{period:s}}),trend:(s,t)=>a.get(`/analysis/trend/${s}`,{params:{period:t}}),goalStatus:()=>a.get("/analysis/goal-status"),weeklyReport:()=>a.get("/analysis/weekly-report")};export{r as a};

@@ -1,3 +1,4 @@
+/* wcw5.25修改-仪表盘测试与优化 */
 :root {
   --primary: #42A5F5;
   --primary-dark: #1E88E5;
@@ -6,20 +7,72 @@
   --secondary-light: #BBDEFB;
   --accent: #FF9800;
   --accent-light: #FFE0B2;
+  --accent-warm: #FF5722;
+  --accent-dark: #E65100;
   --danger: #f44336;
   --danger-light: #FFCDD2;
+  --danger-dark: #C62828;
   --purple: #9C27B0;
   --purple-light: #E1BEE7;
+  --purple-dark: #6A1B9A;
   --teal: #009688;
   --teal-light: #B2DFDB;
+  --gray-stress: #607D8B;
+  --gray-lighter: #ECEFF1;
   --bg: #f0f4f8;
+  --bg-light: #eef1f5;
+  --bg-hover: #fafbfc;
   --card-bg: #ffffff;
   --text: #2c3e50;
   --text-secondary: #607d8b;
+  --text-light: #94a3b8;
   --border: #e0e6ed;
   --shadow: 0 2px 12px rgba(0,0,0,0.08);
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
   --radius: 16px;
   --radius-sm: 10px;
   --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 侧边栏（浅色版） */
+  --sidebar-bg: #f8fafc;
+  --sidebar-active: #2563eb;
+  --sidebar-text: #475569;
+  --sidebar-text-active: #2563eb;
+  --sidebar-hvr: #e2e8f0;
+  --sidebar-section: #94a3b8;
+
+  /* 温暖渐变体系（数据型仪表盘） */
+  --bg-warm: linear-gradient(160deg, #f8fafc 0%, #fefefe 55%, #fefcfb 100%);
+  --bg-page: linear-gradient(165deg, #f0f4f8 0%, #f8f9fa 50%, #fdfcfb 100%);
+  --grad-primary: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);
+  --grad-primary-muted: linear-gradient(135deg, #93c5fd 0%, #a5b4fc 100%);
+  --grad-warm: linear-gradient(135deg, #FFB36B 0%, #FF8FA3 100%);
+  --grad-sleep: linear-gradient(135deg, #9C7BE0 0%, #B98FE0 100%);
+  --grad-steps: linear-gradient(135deg, #5B9DF0 0%, #56C7E0 100%);
+  --grad-water: linear-gradient(135deg, #34B7C7 0%, #5BD0C0 100%);
+  --grad-diet: linear-gradient(135deg, #FF9A6B 0%, #FFB36B 100%);
+  --good: #2EAE7E;
+  --good-light: #DCF3EB;
+  --warn: #E8943A;
+  --warn-light: #FBEBD6;
+  --warn-border: #FFE082;
+  --warn-text: #F57F17;
+  --shadow-soft: 0 4px 20px rgba(91,124,156,0.10);
+  --shadow-hover: 0 10px 30px rgba(91,124,156,0.16);
+
+  /* Sparkline 迷你柱 */
+  --spark-sleep: #9C7BE0;
+  --spark-steps: #5B9DF0;
+  --spark-water: #34B7C7;
+  --spark-diet: #FF9A6B;
+
+  /* 进度条渐变 */
+  --progress-green: linear-gradient(90deg, var(--primary), #64B5F6);
+  --progress-blue: linear-gradient(90deg, var(--secondary), #42A5F5);
+  --progress-orange: linear-gradient(90deg, var(--accent), #FFA726);
+  --progress-purple: linear-gradient(90deg, var(--purple), #AB47BC);
+  --progress-teal: linear-gradient(90deg, var(--teal), #26A69A);
+
+  /* 聊天 */
+  --chat-bg-assistant: #f5f5f5;
 }
