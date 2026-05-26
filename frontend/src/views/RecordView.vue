@@ -1,42 +1,106 @@
 <template>
   <AppLayout>
-    <div class="page-header">
-      <h1>健康记录</h1>
-      <p>记录和管理你的每日健康数据</p>
-    </div>
-
-    <div class="tabs">
-      <button v-for="t in tabs" :key="t.key" :class="['tab', { active: activeTab === t.key }]"
-        @click="activeTab = t.key; editingRecord = null; fetchData()">{{ t.label }}</button>
-    </div>
-
-    <div class="card mb-4">
-      <component :is="currentForm" :editing="editingRecord" @saved="onSaved" @cancel="editingRecord = null" />
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <h3>历史记录</h3>
-        <input class="form-input" style="width:180px" type="date" v-model="filterDate" @change="fetchData()" />
+    <div class="record-page" :class="`record-page--${activeTab}`">
+      <div class="page-header record-page__header">
+        <h1>健康记录</h1>
+        <p>选择类型快速记录，在历史列表中查看、编辑或管理数据</p>
       </div>
-      <LoadingSpinner v-if="loading" />
-      <div v-else-if="records.length === 0" class="empty-state">
-        <i class="fa-solid fa-inbox"></i>
-        <p>暂无记录</p>
+
+      <div class="record-tabs" role="tablist">
+        <button
+          v-for="t in tabs"
+          :key="t.key"
+          type="button"
+          role="tab"
+          :aria-selected="activeTab === t.key"
+          :class="['record-tab', `record-tab--${t.key}`, { active: activeTab === t.key }]"
+          @click="activeTab = t.key; closeEditModal(); fetchData()"
+        >
+          <span class="record-tab__icon"><i class="fa-solid" :class="t.icon"></i></span>
+          <span class="record-tab__label">{{ t.label }}</span>
+        </button>
       </div>
-      <table v-else class="data-table">
-        <thead><tr><th>日期</th><th v-for="h in tableHeaders" :key="h">{{ h }}</th><th>操作</th></tr></thead>
-        <tbody>
-          <tr v-for="r in records" :key="r.id">
-            <td>{{ displayRecordDate(r) }}</td>
-            <td v-for="h in tableHeaders" :key="h">{{ formatCell(r, h) }}</td>
-            <td>
-              <button class="btn btn-sm btn-outline" @click="editRecord(r)" style="margin-right:6px"><i class="fa-solid fa-pen"></i></button>
-              <button class="btn btn-sm btn-danger" @click="deleteRec(r.id)"><i class="fa-solid fa-trash"></i></button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+
+      <div class="card record-card record-card--form mb-4" :class="`record-card--${activeTab}`">
+        <component :is="currentForm" :key="'create-' + activeTab" @saved="onCreated" />
+      </div>
+
+      <RecordEditModal v-if="editingRecord" @close="closeEditModal">
+        <component
+          :is="currentForm"
+          :key="'edit-' + editingRecord.id"
+          :editing="editingRecord"
+          @saved="onEditSaved"
+          @cancel="closeEditModal"
+        />
+      </RecordEditModal>
+
+      <div class="card record-card record-card--history" :class="`record-card--${activeTab}`">
+        <div class="record-history__head">
+          <div class="record-history__title-wrap">
+            <h3>历史记录</h3>
+            <span v-if="!loading && records.length > 0" class="record-count">{{ records.length }} 条</span>
+          </div>
+          <div class="record-filter">
+            <label class="record-filter__label">
+              <i class="fa-solid fa-calendar-days"></i>
+              按日期筛选
+            </label>
+            <input
+              class="form-input record-filter__input"
+              type="date"
+              v-model="filterDate"
+              @change="fetchData()"
+            />
+          </div>
+        </div>
+
+        <div class="record-history__body">
+          <LoadingSpinner v-if="loading" />
+          <div v-else-if="records.length === 0" class="record-empty">
+            <div class="record-empty__icon"><i class="fa-solid fa-inbox"></i></div>
+            <p>暂无记录</p>
+            <p class="record-empty__hint">在上方表单填写并保存，即可添加第一条记录</p>
+          </div>
+          <div v-else class="record-table-wrap">
+            <table class="record-table">
+              <thead>
+                <tr>
+                  <th v-if="showDateColumn">日期</th>
+                  <th v-for="h in tableHeaders" :key="h">{{ h }}</th>
+                  <th class="record-table__actions-col">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="r in records" :key="r.id">
+                  <td v-if="showDateColumn" class="record-date-cell">{{ displayRecordDate(r) }}</td>
+                  <td v-for="h in tableHeaders" :key="h">{{ formatCell(r, h) }}</td>
+                  <td>
+                    <div class="record-row-actions">
+                      <button
+                        type="button"
+                        class="record-action record-action--edit"
+                        title="编辑"
+                        @click="editRecord(r)"
+                      >
+                        <i class="fa-solid fa-pen"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="record-action record-action--delete"
+                        title="删除"
+                        @click="deleteRec(r.id)"
+                      >
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </AppLayout>
 </template>
@@ -53,9 +117,11 @@ import ExerciseForm from '../components/records/ExerciseForm.vue';
 import DietForm from '../components/records/DietForm.vue';
 import StressForm from '../components/records/StressForm.vue';
 import CycleForm from '../components/records/CycleForm.vue';
+import RecordEditModal from '../components/records/RecordEditModal.vue';
 import { useRecordsStore } from '../stores/records.store';
 import { useToast } from '../composables/useToast';
 import { formatDisplayDate, normalizeRecordForForm } from '../utils/date';
+import '../assets/styles/record.css';
 
 const store = useRecordsStore();
 const { records, loading } = storeToRefs(store);
@@ -66,13 +132,13 @@ const editingRecord = ref(null);
 const filterDate = ref('');
 
 const tabs = [
-  { key: 'sleep', label: '💤 睡眠' },
-  { key: 'steps', label: '👟 步数' },
-  { key: 'water', label: '💧 饮水' },
-  { key: 'exercise', label: '🏃 运动' },
-  { key: 'diet', label: '🍽 饮食' },
-  { key: 'stress', label: '😰 压力' },
-  { key: 'cycle', label: '📅 生理周期' },
+  { key: 'sleep', label: '睡眠', icon: 'fa-moon' },
+  { key: 'steps', label: '步数', icon: 'fa-shoe-prints' },
+  { key: 'water', label: '饮水', icon: 'fa-droplet' },
+  { key: 'exercise', label: '运动', icon: 'fa-person-running' },
+  { key: 'diet', label: '饮食', icon: 'fa-utensils' },
+  { key: 'stress', label: '压力', icon: 'fa-face-tired' },
+  { key: 'cycle', label: '生理周期', icon: 'fa-calendar-days' },
 ];
 
 const formMap = { sleep: SleepForm, steps: StepsForm, water: WaterForm, exercise: ExerciseForm, diet: DietForm, stress: StressForm, cycle: CycleForm };
@@ -89,9 +155,9 @@ const headerMap = {
 };
 
 const tableHeaders = computed(() => headerMap[activeTab.value] || []);
+const showDateColumn = computed(() => activeTab.value !== 'cycle');
 
 function displayRecordDate(record) {
-  if (activeTab.value === 'cycle') return formatDisplayDate(record.start_date);
   return formatDisplayDate(record.record_date);
 }
 
@@ -114,7 +180,13 @@ function formatCell(record, header) {
   return '-';
 }
 
-function editRecord(record) { editingRecord.value = normalizeRecordForForm(record); }
+function closeEditModal() {
+  editingRecord.value = null;
+}
+
+function editRecord(record) {
+  editingRecord.value = normalizeRecordForForm(record);
+}
 
 async function fetchData() {
   const params = {};
@@ -126,22 +198,30 @@ async function fetchData() {
   }
 }
 
-async function onSaved() {
-  editingRecord.value = null;
+async function refreshList(message) {
   filterDate.value = '';
   try {
     await store.fetchRecords(activeTab.value, {});
-    showToast('记录已保存', 'success');
+    if (message) showToast(message, 'success');
   } catch (err) {
     showToast(err.response?.data?.error?.message || err.message || '列表刷新失败', 'error');
   }
+}
+
+async function onCreated() {
+  await refreshList('记录已保存');
+}
+
+async function onEditSaved() {
+  closeEditModal();
+  await refreshList('记录已更新');
 }
 
 async function deleteRec(id) {
   if (!confirm('确定删除这条记录？')) return;
   try {
     await store.deleteRecord(activeTab.value, id);
-    if (String(editingRecord.value?.id) === String(id)) editingRecord.value = null;
+    if (String(editingRecord.value?.id) === String(id)) closeEditModal();
     store.removeRecordLocally(id);
     showToast('已删除', 'info');
     try {

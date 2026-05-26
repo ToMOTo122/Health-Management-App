@@ -1,7 +1,10 @@
 <template>
-  <div>
-    <h3 style="margin-bottom:16px">{{ editing ? '编辑压力记录' : '记录压力' }}</h3>
-    <div class="grid-2">
+  <div class="record-form">
+    <h3 class="record-form__title">
+      <span class="record-form__title-icon"><i class="fa-solid fa-face-tired"></i></span>
+      {{ editing ? '编辑压力记录' : '记录压力' }}
+    </h3>
+    <div class="record-form__body grid-2">
       <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.record_date" /></div>
       <div class="form-group">
         <label>压力等级</label>
@@ -13,9 +16,9 @@
       </div>
       <div class="form-group"><label>压力评分 (1-10)</label><input class="form-input" type="number" min="1" max="10" v-model="form.score" /></div>
     </div>
-    <div style="display:flex; gap:10px; margin-top:16px">
-      <button class="btn btn-primary" style="width:auto" @click="submit">保存</button>
-      <button v-if="editing" class="btn btn-secondary" style="width:auto" @click="$emit('cancel')">取消</button>
+    <div class="record-form__actions">
+      <button type="button" class="btn btn-primary" @click="submit"><i class="fa-solid fa-check"></i> 保存</button>
+      <button v-if="editing" type="button" class="btn btn-secondary" @click="$emit('cancel')">取消</button>
     </div>
   </div>
 </template>

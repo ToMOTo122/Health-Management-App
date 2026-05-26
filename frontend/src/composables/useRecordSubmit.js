@@ -1,5 +1,6 @@
 import { useRecordsStore } from '../stores/records.store';
 import { useToast } from './useToast';
+import { getApiErrorMessage } from '../utils/apiError';
 
 export function useRecordSubmit(type, emit) {
   const store = useRecordsStore();
@@ -14,8 +15,7 @@ export function useRecordSubmit(type, emit) {
       }
       emit('saved');
     } catch (err) {
-      const msg = err.response?.data?.error?.message || err.message || '保存失败';
-      showToast(msg, 'error');
+      showToast(getApiErrorMessage(err, '保存失败'), 'error');
     }
   }
 

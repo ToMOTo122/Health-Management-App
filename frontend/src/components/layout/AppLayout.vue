@@ -7,6 +7,7 @@
       <slot />
     </div>
     <BottomNav :currentRoute="currentRoute" />
+    <Toast />
   </div>
 </template>
 
@@ -16,6 +17,7 @@ import { useRoute } from 'vue-router';
 import AppSidebar from './AppSidebar.vue';
 import AppHeader from './AppHeader.vue';
 import BottomNav from './BottomNav.vue';
+import Toast from '../common/Toast.vue';
 
 const route = useRoute();
 const sidebarOpen = ref(false);

@@ -1,0 +1,479 @@
+/* ===== 健康记录页（仅 .record-page 作用域） ===== */
+.record-page {
+  --record-accent: var(--primary);
+  --record-accent-light: var(--primary-light);
+  max-width: 1100px;
+}
+
+.record-page__header {
+  margin-bottom: 24px;
+}
+
+.record-page__header h1 {
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.record-page__header p {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* 类型切换 */
+.record-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px;
+  margin-bottom: 20px;
+  background: var(--card-bg);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.record-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.record-tab__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: var(--transition);
+}
+
+.record-tab:hover {
+  color: var(--text);
+  background: var(--bg);
+}
+
+.record-tab.active {
+  color: var(--text);
+  font-weight: 600;
+  background: var(--bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.record-tab--sleep .record-tab__icon { background: var(--purple-light); color: var(--purple); }
+.record-tab--steps .record-tab__icon { background: var(--secondary-light); color: var(--secondary); }
+.record-tab--water .record-tab__icon { background: var(--teal-light); color: var(--teal); }
+.record-tab--exercise .record-tab__icon { background: var(--accent-light); color: var(--accent); }
+.record-tab--diet .record-tab__icon { background: var(--danger-light); color: var(--danger); }
+.record-tab--stress .record-tab__icon { background: #eceff1; color: #607d8b; }
+.record-tab--cycle .record-tab__icon { background: #fce4ec; color: #c2185b; }
+
+.record-tab.active.record-tab--sleep .record-tab__icon { background: var(--purple); color: #fff; }
+.record-tab.active.record-tab--steps .record-tab__icon { background: var(--secondary); color: #fff; }
+.record-tab.active.record-tab--water .record-tab__icon { background: var(--teal); color: #fff; }
+.record-tab.active.record-tab--exercise .record-tab__icon { background: var(--accent); color: #fff; }
+.record-tab.active.record-tab--diet .record-tab__icon { background: var(--danger); color: #fff; }
+.record-tab.active.record-tab--stress .record-tab__icon { background: #607d8b; color: #fff; }
+.record-tab.active.record-tab--cycle .record-tab__icon { background: #c2185b; color: #fff; }
+
+/* 卡片 */
+.record-page .record-card {
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.record-page .record-card:hover {
+  transform: none;
+}
+
+.record-page .record-card--form {
+  position: relative;
+  padding-top: 28px;
+}
+
+.record-page .record-card--form::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--record-accent);
+}
+
+.record-page .record-card--sleep { --record-accent: var(--purple); --record-accent-light: var(--purple-light); }
+.record-page .record-card--steps { --record-accent: var(--secondary); --record-accent-light: var(--secondary-light); }
+.record-page .record-card--water { --record-accent: var(--teal); --record-accent-light: var(--teal-light); }
+.record-page .record-card--exercise { --record-accent: var(--accent); --record-accent-light: var(--accent-light); }
+.record-page .record-card--diet { --record-accent: var(--danger); --record-accent-light: var(--danger-light); }
+.record-page .record-card--stress { --record-accent: #607d8b; --record-accent-light: #eceff1; }
+.record-page .record-card--cycle { --record-accent: #c2185b; --record-accent-light: #fce4ec; }
+
+.record-page .record-card--history {
+  padding: 0;
+}
+
+.record-page .record-card--history .record-history__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #fafbfd 0%, var(--card-bg) 100%);
+}
+
+.record-page .record-history__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.record-page .record-history__title-wrap h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.record-page .record-count {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--record-accent-light);
+  color: var(--record-accent);
+}
+
+.record-page .record-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.record-page .record-filter__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.record-page .record-filter__input {
+  width: auto;
+  min-width: 160px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.record-page .record-history__body {
+  padding: 8px 0 16px;
+}
+
+/* 表单 */
+.record-page .record-form__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.record-page .record-form__title-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--record-accent-light);
+  color: var(--record-accent);
+  font-size: 18px;
+}
+
+.record-page .record-form__body {
+  gap: 18px 20px;
+}
+
+.record-page .record-form .form-group {
+  margin-bottom: 0;
+}
+
+.record-page .record-form .form-group label {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.record-page .record-form .form-input {
+  background: #fff;
+  border-color: var(--border);
+  padding: 11px 14px;
+  font-size: 14px;
+}
+
+.record-page .record-form .form-input:focus {
+  border-color: var(--record-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--record-accent) 20%, transparent);
+}
+
+.record-page .record-form__readonly {
+  background: var(--bg) !important;
+  cursor: default;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.record-page .record-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.record-page .record-form__actions .btn-primary {
+  width: auto;
+  min-width: 120px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--record-accent), color-mix(in srgb, var(--record-accent) 85%, #000));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--record-accent) 35%, transparent);
+}
+
+.record-page .record-form__actions .btn-primary:hover {
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--record-accent) 45%, transparent);
+}
+
+.record-page .record-form__actions .btn-secondary {
+  width: auto;
+  min-width: 100px;
+  padding: 12px 24px;
+}
+
+.record-page .record-form .form-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.record-page .record-form .form-hint--warn {
+  color: #c62828;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.record-page .record-form .form-hint--warn::before {
+  content: '⚠';
+  flex-shrink: 0;
+}
+
+/* 表格 */
+.record-page .record-table-wrap {
+  overflow-x: auto;
+  margin: 0 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.record-page .record-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.record-page .record-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.record-page .record-table th:first-child {
+  border-radius: 12px 0 0 0;
+}
+
+.record-page .record-table__actions-col {
+  text-align: right;
+  width: 100px;
+}
+
+.record-page .record-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.record-page .record-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.record-page .record-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--record-accent-light) 40%, #fff);
+}
+
+.record-page .record-table .record-date-cell {
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.record-page .record-row-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.record-page .record-action {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: var(--transition);
+}
+
+.record-page .record-action--edit {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.record-page .record-action--edit:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.record-page .record-action--delete {
+  background: var(--danger-light);
+  color: #c62828;
+}
+
+.record-page .record-action--delete:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* 空状态 */
+.record-page .record-empty {
+  text-align: center;
+  padding: 56px 24px;
+  color: var(--text-secondary);
+}
+
+.record-page .record-empty__icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.record-page .record-empty p {
+  font-size: 15px;
+  margin: 0;
+}
+
+.record-page .record-empty__hint {
+  font-size: 13px;
+  margin-top: 8px;
+  opacity: 0.85;
+}
+
+/* 编辑弹窗 */
+.record-modal-overlay {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.record-modal {
+  border-radius: 20px;
+  padding: 28px 28px 32px;
+  max-width: 580px;
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
+}
+
+.record-modal .modal-close {
+  top: 20px;
+  right: 20px;
+  background: var(--bg);
+}
+
+.record-modal .modal-close:hover {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+@media (max-width: 768px) {
+  .record-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .record-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .record-tab {
+    flex-shrink: 0;
+    padding: 8px 12px;
+  }
+
+  .record-tab__label {
+    font-size: 13px;
+  }
+
+  .record-page .record-history__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .record-page .record-filter {
+    width: 100%;
+  }
+
+  .record-page .record-filter__input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .record-page .record-form__body.grid-2 {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,5 +1,5 @@
-const pool = require('../config/db');
-const redis = require('../config/redis');
+const pool = require('../utils/recordDb');
+const { serializeRowDates, serializeRows } = require('../utils/recordDates');
 
 // Factory for record CRUD operations on a given table.
 // Each table must have: id, user_id, record_date
@@ -16,8 +16,7 @@ function makeRecordService(tableName, dateField = 'record_date') {
       );
 
       const [rows] = await pool.query(`SELECT * FROM ${tableName} WHERE id = ?`, [result.insertId]);
-      this._invalidateCache(userId);
-      return rows[0];
+      return serializeRowDates(rows[0]);
     },
 
     async query(userId, { date, from, to, limit = 30, offset = 0 }) {
@@ -43,7 +42,7 @@ function makeRecordService(tableName, dateField = 'record_date') {
       values.push(safeLimit, safeOffset);
 
       const [rows] = await pool.query(sql, values);
-      return rows;
+      return serializeRows(rows);
     },
 
     async getById(userId, id) {
@@ -51,7 +50,7 @@ function makeRecordService(tableName, dateField = 'record_date') {
       if (rows.length === 0) {
         throw Object.assign(new Error('记录不存在'), { code: 'NOT_FOUND', status: 404 });
       }
-      return rows[0];
+      return serializeRowDates(rows[0]);
     },
 
     async update(userId, id, data) {
@@ -74,7 +73,6 @@ function makeRecordService(tableName, dateField = 'record_date') {
       values.push(id);
       await pool.query(`UPDATE ${tableName} SET ${sets.join(', ')} WHERE id = ?`, values);
 
-      this._invalidateCache(userId);
       return this.getById(userId, id);
     },
 
@@ -85,19 +83,6 @@ function makeRecordService(tableName, dateField = 'record_date') {
       }
 
       await pool.query(`DELETE FROM ${tableName} WHERE id = ?`, [id]);
-      this._invalidateCache(userId);
-    },
-
-    async _invalidateCache(userId) {
-      // Invalidate daily stats and summary caches for this user
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        await redis.del(`daily_stats:${userId}:${today}`);
-        const summaryKeys = await redis.keys(`summary:${userId}:*`);
-        if (summaryKeys.length > 0) await redis.del(...summaryKeys);
-      } catch (_) {
-        // Redis might not be available; ignore
-      }
     },
   };
 }

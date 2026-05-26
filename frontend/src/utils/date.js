@@ -12,30 +12,46 @@ function formatYmd(y, m, day) {
   return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+/**
+ * 转为本地日历 YYYY-MM-DD。
+ * 禁止对 ISO 字符串使用 split('T')[0]（会得到 UTC 日期，东八区会少一天）。
+ */
+export function toDateOnlyString(value) {
+  if (value == null || value === '') return '';
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? '' : localDateString(value);
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+    const d = new Date(trimmed);
+    if (!Number.isNaN(d.getTime())) return localDateString(d);
+    return trimmed.slice(0, 10);
+  }
+  return '';
+}
+
 function toValidDate(value) {
   if (value == null || value === '') return null;
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? null : value;
   }
   if (typeof value === 'string') {
-    const s = value.includes('T') ? value.split('T')[0] : value.slice(0, 10);
-    const d = new Date(`${s}T12:00:00`);
-    return Number.isNaN(d.getTime()) ? null : d;
+    const trimmed = value.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      const [y, m, d] = trimmed.split('-').map(Number);
+      return new Date(y, m - 1, d, 12, 0, 0);
+    }
+    const parsed = new Date(trimmed);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
   return null;
 }
 
-/** 列表展示用，安全格式化日期，避免对 Date 调用 split */
+/** 列表展示用 */
 export function formatDisplayDate(value) {
-  if (value == null || value === '') return '-';
-  if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? '-' : localDateString(value);
-  }
-  if (typeof value === 'string') {
-    const s = value.includes('T') ? value.split('T')[0] : value.slice(0, 10);
-    return s || '-';
-  }
-  return '-';
+  const s = toDateOnlyString(value);
+  return s || '-';
 }
 
 /** 表单 time 输入用 HH:mm */
@@ -53,13 +69,13 @@ export function normalizeRecordRow(row) {
   if (!row || typeof row !== 'object') return row;
   const out = { ...row };
   if ('record_date' in out && out.record_date != null) {
-    out.record_date = formatDisplayDate(out.record_date);
+    out.record_date = toDateOnlyString(out.record_date);
   }
   if ('start_date' in out && out.start_date != null) {
-    out.start_date = formatDisplayDate(out.start_date);
+    out.start_date = toDateOnlyString(out.start_date);
   }
   if ('end_date' in out && out.end_date != null && out.end_date !== '') {
-    out.end_date = formatDisplayDate(out.end_date);
+    out.end_date = toDateOnlyString(out.end_date);
   }
   if ('sleep_time' in out) out.sleep_time = formatTimeValue(out.sleep_time);
   if ('wake_time' in out) out.wake_time = formatTimeValue(out.wake_time);
@@ -70,8 +86,8 @@ export function normalizeRecordRow(row) {
 /** 编辑表单回填，保证 date/time 控件可绑定 */
 export function normalizeRecordForForm(record) {
   const out = normalizeRecordRow({ ...record });
-  if (out.record_date === '-') out.record_date = localDateString();
-  if (out.start_date === '-') out.start_date = localDateString();
+  if (!out.record_date) out.record_date = localDateString();
+  if (!out.start_date) out.start_date = localDateString();
   if (out.end_date === '-') out.end_date = '';
   return out;
 }

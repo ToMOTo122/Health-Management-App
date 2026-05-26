@@ -48,20 +48,34 @@ export const useRecordsStore = defineStore('records', () => {
     }
   }
 
-  async function createRecord(type, formData) {
-    const { data } = await recordsAPI[type].create(stripSystemFields(formData));
-    if (data?.success === false) {
-      throw apiError(data.error?.message || '保存失败', data);
+  async function requestRecord(apiCall, fallbackMsg) {
+    try {
+      const { data } = await apiCall();
+      if (data?.success === false) {
+        throw apiError(data.error?.message || fallbackMsg, data);
+      }
+      return data;
+    } catch (err) {
+      if (err.response?.data) {
+        const body = err.response.data;
+        throw apiError(body.error?.message || fallbackMsg, body);
+      }
+      throw err;
     }
-    return data;
+  }
+
+  async function createRecord(type, formData) {
+    return requestRecord(
+      () => recordsAPI[type].create(stripSystemFields(formData)),
+      '保存失败'
+    );
   }
 
   async function updateRecord(type, id, formData) {
-    const { data } = await recordsAPI[type].update(id, stripSystemFields(formData));
-    if (data?.success === false) {
-      throw apiError(data.error?.message || '保存失败', data);
-    }
-    return data;
+    return requestRecord(
+      () => recordsAPI[type].update(id, stripSystemFields(formData)),
+      '保存失败'
+    );
   }
 
   async function deleteRecord(type, id) {
