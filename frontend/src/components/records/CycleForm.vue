@@ -16,21 +16,18 @@
 
 <script setup>
 import { reactive, onMounted } from 'vue';
-import { useRecordsStore } from '../../stores/records.store';
+import { useRecordSubmit } from '../../composables/useRecordSubmit';
+import { localDateString, normalizeRecordForForm } from '../../utils/date';
 
 const props = defineProps({ editing: Object });
 const emit = defineEmits(['saved', 'cancel']);
-const store = useRecordsStore();
+const { save } = useRecordSubmit('cycle', emit);
 
-const form = reactive({ start_date: new Date().toISOString().split('T')[0], end_date: '', cycle_length: 28, notes: '' });
+const form = reactive({ start_date: localDateString(), end_date: '', cycle_length: 28, notes: '' });
 
-onMounted(() => { if (props.editing) Object.assign(form, props.editing); });
+onMounted(() => { if (props.editing) Object.assign(form, normalizeRecordForForm(props.editing)); });
 
 async function submit() {
-  try {
-    if (props.editing) await store.updateRecord('cycle', props.editing.id, { ...form });
-    else await store.createRecord('cycle', { ...form });
-    emit('saved');
-  } catch (_) {}
+  await save(form, props.editing);
 }
 </script>

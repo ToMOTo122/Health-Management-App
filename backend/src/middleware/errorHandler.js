@@ -8,6 +8,13 @@ function errorHandler(err, req, res, _next) {
     });
   }
 
+  if (err.code === 'ER_DUP_ENTRY') {
+    return res.status(409).json({
+      success: false,
+      error: { code: 'DUPLICATE_ENTRY', message: '该日期已有记录，请编辑原有记录' },
+    });
+  }
+
   const status = err.status || 500;
   const message = status === 500 ? '服务器内部错误' : err.message;
 

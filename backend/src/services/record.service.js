@@ -38,7 +38,9 @@ function makeRecordService(tableName, dateField = 'record_date') {
       }
 
       sql += ` ORDER BY ${dateField} DESC, id DESC LIMIT ? OFFSET ?`;
-      values.push(parseInt(limit), parseInt(offset));
+      const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 30, 1), 200);
+      const safeOffset = Math.max(parseInt(offset, 10) || 0, 0);
+      values.push(safeLimit, safeOffset);
 
       const [rows] = await pool.query(sql, values);
       return rows;

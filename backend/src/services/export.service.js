@@ -10,6 +10,10 @@ const TABLES = {
   cycle: 'cycle_records',
 };
 
+const DATE_FIELD_MAP = {
+  cycle: 'start_date',
+};
+
 const exportService = {
   async exportJSON(userId) {
     const [profile] = await pool.query(
@@ -26,8 +30,9 @@ const exportService = {
     };
 
     for (const [type, table] of Object.entries(TABLES)) {
+      const dateField = DATE_FIELD_MAP[type] || 'record_date';
       const [rows] = await pool.query(
-        `SELECT * FROM ${table} WHERE user_id = ? ORDER BY record_date DESC`,
+        `SELECT * FROM ${table} WHERE user_id = ? ORDER BY ${dateField} DESC`,
         [userId]
       );
       data.records[type] = rows;

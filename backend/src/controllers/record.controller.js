@@ -15,15 +15,29 @@ const TABLE_MAP = {
 
 const VALID_TYPES = Object.keys(TABLE_MAP);
 
+const DATE_FIELD_MAP = {
+  cycle: 'start_date',
+};
+
+function sanitizeBody(body) {
+  const data = { ...body };
+  delete data.id;
+  delete data.user_id;
+  delete data.created_at;
+  delete data.updated_at;
+  return data;
+}
+
 // Create a controller factory for a given record type
 function makeRecordController(type) {
   const tableName = TABLE_MAP[type];
-  const service = makeRecordService(tableName);
+  const dateField = DATE_FIELD_MAP[type] || 'record_date';
+  const service = makeRecordService(tableName, dateField);
 
   return {
     async create(req, res) {
       try {
-        const record = await service.create(req.user.id, req.body);
+        const record = await service.create(req.user.id, sanitizeBody(req.body));
         await checkGoalAchievement(req.user.id, type, req.body);
         return success(res, record, '记录成功', 201);
       } catch (err) {
@@ -55,7 +69,7 @@ function makeRecordController(type) {
 
     async update(req, res) {
       try {
-        const record = await service.update(req.user.id, req.params.id, req.body);
+        const record = await service.update(req.user.id, req.params.id, sanitizeBody(req.body));
         return success(res, record, '已更新');
       } catch (err) {
         if (err.code) return error(res, err.code, err.message, err.status || 400);
