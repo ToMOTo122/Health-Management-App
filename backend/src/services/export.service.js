@@ -29,6 +29,7 @@ const exportService = {
       records: {},
     };
 
+
     for (const [type, table] of Object.entries(TABLES)) {
       const dateField = DATE_FIELD_MAP[type] || 'record_date';
       const [rows] = await pool.query(
@@ -45,8 +46,9 @@ const exportService = {
     const table = TABLES[type];
     if (!table) return null;
 
+    const dateField = DATE_FIELD_MAP[type] || 'record_date';
     const [rows] = await pool.query(
-      `SELECT * FROM ${table} WHERE user_id = ? ORDER BY record_date DESC`,
+      `SELECT * FROM ${table} WHERE user_id = ? ORDER BY ${dateField} DESC`,
       [userId]
     );
 

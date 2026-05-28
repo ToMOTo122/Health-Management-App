@@ -7,6 +7,8 @@ const router = Router();
 router.get('/profile', auth, usersController.getProfile);
 router.put('/profile', auth, usersController.updateProfile);
 router.put('/password', auth, usersController.changePassword);
+router.get('/settings', auth, usersController.getSettings);
+router.put('/settings', auth, usersController.updateSettings);
 router.get('/goals', auth, usersController.getGoals);
 router.put('/goals', auth, usersController.updateGoals);
 

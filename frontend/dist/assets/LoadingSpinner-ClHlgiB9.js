@@ -1,1 +1,0 @@
-import{_ as s}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{o as n,c as o,a as r,d as a}from"./index-C3jG8Qnq.js";const t={},c={class:"loading-spinner"};function i(d,e){return n(),o("div",c,[...e[0]||(e[0]=[r("i",{class:"fa-solid fa-spinner"},null,-1),a(" 加载中... ",-1)])])}const f=s(t,[["render",i]]);export{f as L};

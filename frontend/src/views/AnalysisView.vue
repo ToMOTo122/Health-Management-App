@@ -32,11 +32,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, onActivated, nextTick, watch } from 'vue';
 import AppLayout from '../components/layout/AppLayout.vue';
 import { analysisAPI } from '../api/analysis.api';
 import { useCharts } from '../composables/useCharts';
-import Chart from 'chart.js/auto';
 
 const { createChart, destroyAll } = useCharts();
 
@@ -78,9 +77,7 @@ async function loadChart(key) {
     await nextTick();
     const el = chartRefs[key];
     if (!el) return;
-    // Destroy existing chart on this canvas
-    const existing = Chart.getChart(el);
-    if (existing) existing.destroy();
+    // wcw5.25修改-使用统一工具，自动销毁旧实例
     createChart(el, {
       type: 'line',
       data: {
@@ -106,6 +103,9 @@ async function loadAll() {
 }
 
 watch(period, loadAll);
+
+// wcw5.25修改-keepAlive缓存后重新激活时重新加载
+onActivated(loadAll);
 
 onMounted(loadAll);
 onUnmounted(destroyAll);

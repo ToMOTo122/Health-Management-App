@@ -1,6 +1,7 @@
 const pool = require('../config/db');
 const redis = require('../config/redis');
 const ollamaConfig = require('../config/ollama');
+const deepseekConfig = require('../config/deepseek');
 const analysisService = require('./analysis.service');
 
 const SYSTEM_PROMPT = `你是"健康小助手"（Health Assistant），一个专业、友好的健康管理 AI 助手。
@@ -51,9 +52,86 @@ const FALLBACK_RESPONSES = [
 ];
 
 const chatService = {
-  async sendMessage(userId, userMessage) {
+  // ========== Conversation management ==========
+
+  async listConversations(userId) {
+    const [rows] = await pool.query(
+      `SELECT c.id, c.title, c.created_at, c.updated_at,
+              (SELECT content FROM chat_history
+               WHERE conversation_id = c.id AND role = 'user'
+               ORDER BY created_at DESC LIMIT 1) AS last_message
+       FROM conversations c
+       WHERE c.user_id = ?
+       ORDER BY c.updated_at DESC`,
+      [userId]
+    );
+    return rows;
+  },
+
+  async createConversation(userId, title) {
+    const [result] = await pool.query(
+      'INSERT INTO conversations (user_id, title) VALUES (?, ?)',
+      [userId, title || '新对话']
+    );
+    const [rows] = await pool.query(
+      'SELECT id, title, created_at, updated_at FROM conversations WHERE id = ?',
+      [result.insertId]
+    );
+    return rows[0];
+  },
+
+  async renameConversation(conversationId, userId, title) {
+    const [result] = await pool.query(
+      'UPDATE conversations SET title = ? WHERE id = ? AND user_id = ?',
+      [title, conversationId, userId]
+    );
+    if (result.affectedRows === 0) {
+      const err = new Error('对话不存在');
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+      throw err;
+    }
+  },
+
+  async deleteConversation(conversationId, userId) {
+    const [result] = await pool.query(
+      'DELETE FROM conversations WHERE id = ? AND user_id = ?',
+      [conversationId, userId]
+    );
+    if (result.affectedRows === 0) {
+      const err = new Error('对话不存在');
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+      throw err;
+    }
+    await redis.del(`chat_ctx:${conversationId}`);
+  },
+
+  // ========== Messaging ==========
+
+  async sendMessage(userId, conversationId, userMessage, model = 'ollama') {
+    const [convs] = await pool.query(
+      'SELECT id, title FROM conversations WHERE id = ? AND user_id = ?',
+      [conversationId, userId]
+    );
+    if (convs.length === 0) {
+      const err = new Error('对话不存在');
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+      throw err;
+    }
+
+    // Auto-title from first user message
+    if (convs[0].title === '新对话') {
+      const autoTitle = userMessage.replace(/\n/g, ' ').substring(0, 30);
+      await pool.query(
+        'UPDATE conversations SET title = ? WHERE id = ?',
+        [autoTitle, conversationId]
+      );
+    }
+
     // Get conversation history from Redis
-    const ctxKey = `chat_ctx:${userId}`;
+    const ctxKey = `chat_ctx:${conversationId}`;
     const ctxData = await redis.get(ctxKey);
     const history = ctxData ? JSON.parse(ctxData) : [];
 
@@ -65,34 +143,54 @@ const chatService = {
       { role: 'system', content: SYSTEM_PROMPT },
     ];
 
-    // Include recent history (last 8 messages)
     for (const msg of history.slice(-8)) {
       messages.push({ role: msg.role, content: msg.content });
     }
 
-    // Add health context + user message
     messages.push({
       role: 'user',
       content: `${healthContext}\n\n[用户问题]\n${userMessage}`,
     });
 
     // Save user message to DB and history
-    await this._saveMessage(userId, 'user', userMessage);
+    await this._saveMessage(userId, conversationId, 'user', userMessage);
     history.push({ role: 'user', content: userMessage });
 
     let reply;
     let ollamaError = false;
 
-    try {
-      reply = await this._callOllama(messages);
-    } catch (err) {
-      console.error('Ollama call failed, using fallback:', err.message);
-      ollamaError = true;
-      reply = this._fallbackResponse(userMessage);
+    if (model === 'deepseek') {
+      const [userRows] = await pool.query(
+        'SELECT deepseek_api_key FROM users WHERE id = ?', [userId]
+      );
+      const apiKey = userRows[0]?.deepseek_api_key;
+      if (!apiKey) {
+        const err = new Error('请先在个人中心配置 DeepSeek API Key');
+        err.status = 400;
+        err.code = 'DEEPSEEK_KEY_MISSING';
+        throw err;
+      }
+      try {
+        reply = await this._callDeepSeek(messages, apiKey);
+      } catch (err) {
+        console.error('DeepSeek API call failed:', err.message);
+        const apiErr = new Error('DeepSeek API 调用失败: ' + err.message);
+        apiErr.status = 502;
+        apiErr.code = 'DEEPSEEK_API_ERROR';
+        throw apiErr;
+      }
+    } else {
+      try {
+        reply = await this._callOllama(messages);
+      } catch (err) {
+        console.error('Ollama call failed, using fallback:', err.message);
+        ollamaError = true;
+        reply = this._fallbackResponse(userMessage);
+      }
     }
 
     // Save assistant reply
-    await this._saveMessage(userId, 'assistant', reply);
+    await this._saveMessage(userId, conversationId, 'assistant', reply);
     history.push({ role: 'assistant', content: reply });
 
     // Keep last 20 messages in Redis cache
@@ -102,10 +200,10 @@ const chatService = {
     return { reply, ollamaError };
   },
 
-  async getHistory(userId, limit = 50) {
+  async getHistory(userId, conversationId, limit = 50) {
     const [rows] = await pool.query(
-      'SELECT role, content, created_at FROM chat_history WHERE user_id = ? ORDER BY created_at DESC LIMIT ?',
-      [userId, parseInt(limit)]
+      'SELECT role, content, created_at FROM chat_history WHERE user_id = ? AND conversation_id = ? ORDER BY created_at DESC LIMIT ?',
+      [userId, conversationId, parseInt(limit)]
     );
     return rows.reverse();
   },
@@ -144,7 +242,7 @@ const chatService = {
           messages,
           stream: false,
           options: {
-            temperature: 0.7,
+            temperature: 0.5,
             top_p: 0.9,
           },
         }),
@@ -162,6 +260,52 @@ const chatService = {
     }
   },
 
+  async _callDeepSeek(messages, apiKey) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), deepseekConfig.timeout);
+    console.log('[DeepSeek] Calling API, model:', deepseekConfig.model, 'messages count:', messages.length);
+
+    try {
+      const response = await fetch(`${deepseekConfig.baseURL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: deepseekConfig.model,
+          messages,
+          stream: false,
+          temperature: 0.5,
+          top_p: 0.9,
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        let errorMsg = `DeepSeek ${response.status}`;
+        try {
+          const errorJson = JSON.parse(errorBody);
+          errorMsg = errorJson.error?.message || errorMsg;
+        } catch (_) {}
+        console.error('[DeepSeek] API error:', errorMsg);
+        throw new Error(errorMsg);
+      }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || '';
+      console.log('[DeepSeek] Response received, length:', content.length);
+      console.log('[DeepSeek] First 100 chars:', content.substring(0, 100));
+      return content;
+    } catch (err) {
+      console.error('[DeepSeek] Request failed:', err.message);
+      throw err;
+    } finally {
+      clearTimeout(timeout);
+    }
+  },
+
   _fallbackResponse(message) {
     const lower = (message || '').toLowerCase();
     for (const { keywords, reply } of FALLBACK_RESPONSES) {
@@ -172,10 +316,10 @@ const chatService = {
     return '我目前无法连接到 AI 服务，请检查 Ollama 是否正在运行。你可以尝试的问题包括：睡眠、饮水、运动、饮食、压力管理和步数相关建议。\n\n⚕️ 提示：本系统仅提供一般健康管理建议，不能替代专业医生诊断。如有身体不适，请及时就医。';
   },
 
-  async _saveMessage(userId, role, content) {
+  async _saveMessage(userId, conversationId, role, content) {
     await pool.query(
-      'INSERT INTO chat_history (user_id, role, content) VALUES (?, ?, ?)',
-      [userId, role, content]
+      'INSERT INTO chat_history (user_id, conversation_id, role, content) VALUES (?, ?, ?, ?)',
+      [userId, conversationId, role, content]
     );
   },
 };
