@@ -373,6 +373,20 @@
   font-size: 12px;
 }
 
+/* ===== CONVERSATION SIDEBAR RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .chat-page-layout {
+    flex-direction: column;
+    height: auto !important;
+  }
+  .conv-sidebar {
+    width: 100% !important;
+    max-height: 200px;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
 /* Utility */
 .mt-4 { margin-top: 24px; }
 .mb-4 { margin-bottom: 24px; }

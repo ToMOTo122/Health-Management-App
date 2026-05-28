@@ -27,6 +27,33 @@
       <button class="btn btn-primary mt-3" style="width:auto" @click="saveProfile">保存资料</button>
     </div>
 
+    <!-- AI Model Settings -->
+    <div class="card mb-4">
+      <div class="card-header"><h3>AI 模型设置</h3></div>
+      <div class="form-group">
+        <label>DeepSeek API Key</label>
+        <div style="display:flex; gap:8px;">
+          <input
+            class="form-input"
+            :type="showApiKey ? 'text' : 'password'"
+            v-model="deepseekApiKey"
+            placeholder="输入你的 DeepSeek API Key"
+            style="flex:1"
+          />
+          <button class="btn btn-outline" style="width:auto; white-space:nowrap;" @click="showApiKey = !showApiKey">
+            {{ showApiKey ? '隐藏' : '显示' }}
+          </button>
+        </div>
+        <p v-if="hasKey" style="font-size:12px; color:var(--teal); margin-top:4px;">
+          <i class="fa-solid fa-circle-check"></i> 已配置 API Key
+        </p>
+        <p style="font-size:12px; color:var(--text-secondary); margin-top:4px;">
+          在 <a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--primary);">platform.deepseek.com</a> 获取你的 API Key
+        </p>
+      </div>
+      <button class="btn btn-primary mt-3" style="width:auto" @click="saveApiKey">保存 API Key</button>
+    </div>
+
     <!-- Goals -->
     <div class="card mb-4">
       <div class="card-header"><h3>健康目标</h3></div>
@@ -102,6 +129,9 @@ const pwForm = reactive({ oldPassword: '', newPassword: '' });
 const pwMsg = ref('');
 const pwOk = ref(false);
 const reminders = ref([]);
+const showApiKey = ref(false);
+const deepseekApiKey = ref('');
+const hasKey = ref(false);
 
 const typeLabel = (t) => ({ water: '💧 饮水', sleep: '💤 睡眠', exercise: '🏃 运动', record: '📋 记录' }[t] || t);
 
@@ -114,12 +144,13 @@ function downloadBlob(blob, name) {
 
 async function loadData() {
   try {
-    const [pRes, gRes, rRes] = await Promise.all([
-      usersAPI.getProfile(), usersAPI.getGoals(), remindersAPI.list(),
+    const [pRes, gRes, rRes, sRes] = await Promise.all([
+      usersAPI.getProfile(), usersAPI.getGoals(), remindersAPI.list(), usersAPI.getSettings(),
     ]);
     if (pRes.data.success) Object.assign(profile, pRes.data.data);
     if (gRes.data.success) Object.assign(goals, gRes.data.data);
     if (rRes.data.success) reminders.value = rRes.data.data;
+    if (sRes.data.success) hasKey.value = sRes.data.data.has_deepseek_key;
   } catch (_) {}
 }
 
@@ -127,6 +158,17 @@ async function saveProfile() {
   try {
     const { data } = await usersAPI.updateProfile({ nickname: profile.nickname, gender: profile.gender, age: profile.age, height_cm: profile.height_cm, weight_kg: profile.weight_kg });
     if (data.success) showToast('资料已保存', 'success');
+  } catch (err) { showToast(err.response?.data?.error?.message || '保存失败', 'error'); }
+}
+
+async function saveApiKey() {
+  try {
+    const { data } = await usersAPI.updateSettings({ deepseek_api_key: deepseekApiKey.value });
+    if (data.success) {
+      hasKey.value = data.data.has_deepseek_key;
+      deepseekApiKey.value = '';
+      showToast('API Key 已保存', 'success');
+    }
   } catch (err) { showToast(err.response?.data?.error?.message || '保存失败', 'error'); }
 }
 

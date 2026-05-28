@@ -6,4 +6,6 @@ export const usersAPI = {
   changePassword: (data) => api.put('/users/password', data),
   getGoals: () => api.get('/users/goals'),
   updateGoals: (data) => api.put('/users/goals', data),
+  getSettings: () => api.get('/users/settings'),
+  updateSettings: (data) => api.put('/users/settings', data),
 };

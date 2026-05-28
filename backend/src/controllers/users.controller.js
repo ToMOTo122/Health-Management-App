@@ -39,6 +39,27 @@ const usersController = {
     }
   },
 
+  async getSettings(req, res) {
+    try {
+      const profile = await userService.getProfile(req.user.id);
+      return success(res, { has_deepseek_key: profile.has_deepseek_key });
+    } catch (err) {
+      if (err.code) return error(res, err.code, err.message, err.status || 400);
+      throw err;
+    }
+  },
+
+  async updateSettings(req, res) {
+    try {
+      const { deepseek_api_key } = req.body;
+      await userService.updateProfile(req.user.id, { deepseek_api_key: deepseek_api_key || null });
+      return success(res, { has_deepseek_key: !!deepseek_api_key }, 'API Key 已保存');
+    } catch (err) {
+      if (err.code) return error(res, err.code, err.message, err.status || 400);
+      throw err;
+    }
+  },
+
   async getGoals(req, res) {
     try {
       const goals = await userService.getGoals(req.user.id);
