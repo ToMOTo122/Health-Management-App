@@ -12,4 +12,8 @@ export default defineConfig({
       },
     },
   },
+  test: {
+    globals: true,          // 允许使用 describe, it 等全局变量
+    environment: 'jsdom',   // 模拟浏览器环境
+  },
 });

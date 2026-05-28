@@ -25,9 +25,14 @@ const exportService = {
       records: {},
     };
 
+
     for (const [type, table] of Object.entries(TABLES)) {
+      let orderColumn = 'record_date';
+      if (table === 'cycle_records') {
+        orderColumn = 'start_date';
+      }
       const [rows] = await pool.query(
-        `SELECT * FROM ${table} WHERE user_id = ? ORDER BY record_date DESC`,
+        `SELECT * FROM ${table} WHERE user_id = ? ORDER BY ${orderColumn} DESC`,
         [userId]
       );
       data.records[type] = rows;
