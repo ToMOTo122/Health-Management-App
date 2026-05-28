@@ -19,7 +19,8 @@ CREATE TABLE users (
     gender      ENUM('male','female','other') DEFAULT NULL,
     age         TINYINT UNSIGNED DEFAULT NULL,
     height_cm   DECIMAL(5,1)   DEFAULT NULL COMMENT '身高(cm)',
-    weight_kg   DECIMAL(5,1)   DEFAULT NULL COMMENT '体重(kg)',
+    weight_kg          DECIMAL(5,1)   DEFAULT NULL COMMENT '体重(kg)',
+    deepseek_api_key   VARCHAR(255)   DEFAULT NULL COMMENT 'DeepSeek API Key (user-owned)',
     created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -27,7 +28,21 @@ CREATE TABLE users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- 2. health_goals
+-- 2. conversations (multi-conversation chat)
+-- ============================================================
+CREATE TABLE conversations (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT UNSIGNED   NOT NULL,
+    title       VARCHAR(100)   NOT NULL DEFAULT '新对话',
+    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    INDEX idx_user_updated (user_id, updated_at),
+    CONSTRAINT fk_conv_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 3. health_goals
 -- ============================================================
 CREATE TABLE health_goals (
     id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -44,7 +59,7 @@ CREATE TABLE health_goals (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- 3. sleep_records
+-- 4. sleep_records
 -- ============================================================
 CREATE TABLE sleep_records (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -189,15 +204,18 @@ CREATE TABLE goal_achievements (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- 12. chat_history (persist chat messages)
+-- 13. chat_history (persist chat messages)
 -- ============================================================
 CREATE TABLE chat_history (
-    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id     INT UNSIGNED   NOT NULL,
-    role        ENUM('user','assistant') NOT NULL,
-    content     TEXT           NOT NULL,
-    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id         INT UNSIGNED   NOT NULL,
+    conversation_id INT UNSIGNED   NOT NULL,
+    role            ENUM('user','assistant') NOT NULL,
+    content         TEXT           NOT NULL,
+    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+    INDEX idx_conv_time (conversation_id, created_at),
     INDEX idx_user_time (user_id, created_at),
+    CONSTRAINT fk_chat_conv FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
     CONSTRAINT fk_chat_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

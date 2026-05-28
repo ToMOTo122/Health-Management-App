@@ -3,17 +3,20 @@ const pool = require('../config/db');
 const userService = {
   async getProfile(userId) {
     const [rows] = await pool.query(
-      'SELECT id, email, nickname, gender, age, height_cm, weight_kg, created_at FROM users WHERE id = ?',
+      'SELECT id, email, nickname, gender, age, height_cm, weight_kg, deepseek_api_key, created_at FROM users WHERE id = ?',
       [userId]
     );
     if (rows.length === 0) {
       throw Object.assign(new Error('用户不存在'), { code: 'USER_NOT_FOUND', status: 404 });
     }
-    return rows[0];
+    const profile = rows[0];
+    profile.has_deepseek_key = !!profile.deepseek_api_key;
+    delete profile.deepseek_api_key;
+    return profile;
   },
 
   async updateProfile(userId, fields) {
-    const allowed = ['nickname', 'gender', 'age', 'height_cm', 'weight_kg'];
+    const allowed = ['nickname', 'gender', 'age', 'height_cm', 'weight_kg', 'deepseek_api_key'];
     const sets = [];
     const values = [];
 
