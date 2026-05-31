@@ -59,17 +59,24 @@
       <div class="card-header"><h3>AI 模型设置</h3></div>
       <div class="form-group">
         <label>DeepSeek API Key</label>
-        <div style="display:flex; gap:8px;">
-          <input
-            class="form-input"
-            :type="showApiKey ? 'text' : 'password'"
-            v-model="deepseekApiKey"
-            placeholder="输入你的 DeepSeek API Key"
-            style="flex:1"
-          />
-          <button class="btn btn-outline" style="width:auto; white-space:nowrap;" @click="showApiKey = !showApiKey">
-            {{ showApiKey ? '隐藏' : '显示' }}
-          </button>
+        <div class="api-key-row">
+          <div class="api-key-input-wrap" @mouseenter="hoverKey = true" @mouseleave="hoverKey = false">
+            <input
+              class="form-input"
+              :type="showApiKey ? 'text' : 'password'"
+              v-model="deepseekApiKey"
+              placeholder="输入你的 DeepSeek API Key"
+            />
+            <Transition name="fade">
+              <i
+                v-if="hoverKey && deepseekApiKey"
+                class="fa-solid eye-toggle"
+                :class="showApiKey ? 'fa-eye-slash' : 'fa-eye'"
+                @click="showApiKey = !showApiKey"
+              ></i>
+            </Transition>
+          </div>
+          <button class="btn btn-primary" style="width:auto; white-space:nowrap;" @click="saveApiKey">保存 API Key</button>
         </div>
         <p v-if="hasKey" style="font-size:12px; color:var(--teal); margin-top:4px;">
           <i class="fa-solid fa-circle-check"></i> 已配置 API Key
@@ -78,7 +85,6 @@
           在 <a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--primary);">platform.deepseek.com</a> 获取你的 API Key
         </p>
       </div>
-      <button class="btn btn-primary mt-3" style="width:auto" @click="saveApiKey">保存 API Key</button>
     </div>
 
     <!-- Goals -->
@@ -167,6 +173,7 @@ const reminders = ref([]);
 const showApiKey = ref(false);
 const deepseekApiKey = ref('');
 const hasKey = ref(false);
+const hoverKey = ref(false);
 
 // UI states
 const profileSaving = ref(false);
@@ -257,7 +264,12 @@ async function loadData() {
     }
     if (gRes.data.success) Object.assign(goals, gRes.data.data);
     if (rRes.data.success) reminders.value = rRes.data.data;
-    if (sRes.data.success) hasKey.value = sRes.data.data.has_deepseek_key;
+    if (sRes.data.success) {
+      hasKey.value = sRes.data.data.has_deepseek_key;
+      if (sRes.data.data.deepseek_api_key) {
+        deepseekApiKey.value = sRes.data.data.deepseek_api_key;
+      }
+    }
   } catch (_) {}
 }
 
@@ -299,7 +311,6 @@ async function saveApiKey() {
     const { data } = await usersAPI.updateSettings({ deepseek_api_key: deepseekApiKey.value });
     if (data.success) {
       hasKey.value = data.data.has_deepseek_key;
-      deepseekApiKey.value = '';
       showToast('API Key 已保存', 'success');
     }
   } catch (err) { showToast(err.response?.data?.error?.message || '保存失败', 'error'); }
@@ -462,5 +473,38 @@ onMounted(loadData);
   font-weight: bold;
   color: white;
   text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+}
+.api-key-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.api-key-input-wrap {
+  position: relative;
+  flex: 1;
+}
+.api-key-input-wrap .form-input {
+  padding-right: 32px;
+}
+.eye-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  transition: color 0.15s;
+}
+.eye-toggle:hover {
+  color: var(--primary);
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

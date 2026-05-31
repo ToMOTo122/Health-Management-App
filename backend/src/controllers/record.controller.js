@@ -36,6 +36,17 @@ async function prepareRecordBody(type, req, excludeId = null) {
   return raw;
 }
 
+// 检查日期字段不能是未来日期
+function validateNotFuture(data) {
+  const today = new Date().toISOString().split('T')[0];
+  const dateFields = ['record_date', 'start_date', 'end_date'];
+  for (const field of dateFields) {
+    if (data[field] && data[field] > today) {
+      throw Object.assign(new Error('日期不能设置为未来日期'), { code: 'FUTURE_DATE', status: 400 });
+    }
+  }
+}
+
 // Create a controller factory for a given record type
 function makeRecordController(type) {
   const tableName = TABLE_MAP[type];
@@ -45,6 +56,16 @@ function makeRecordController(type) {
   return {
     async create(req, res) {
       try {
+        validateNotFuture(req.body);
+
+        // 步数记录：每天只能有一条
+        if (type === 'steps') {
+          const existing = await service.query(req.user.id, { date: req.body.record_date, limit: 1 });
+          if (existing.length > 0) {
+            return error(res, 'DUPLICATE_STEPS', '当天已存在步数记录，每天只能记录一条', 409);
+          }
+        }
+
         const body = await prepareRecordBody(type, req);
         const record = await service.create(req.user.id, body);
         return success(res, record, '记录成功', 201);
@@ -77,6 +98,8 @@ function makeRecordController(type) {
 
     async update(req, res) {
       try {
+        validateNotFuture(req.body);
+
         const body = await prepareRecordBody(type, req, req.params.id);
         const record = await service.update(req.user.id, req.params.id, body);
         return success(res, record, '已更新');

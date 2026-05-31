@@ -15,6 +15,13 @@ const userService = {
     return profile;
   },
 
+  async getDeepSeekKey(userId) {
+    const [rows] = await pool.query(
+      'SELECT deepseek_api_key FROM users WHERE id = ?', [userId]
+    );
+    return rows[0]?.deepseek_api_key || null;
+  },
+
   async updateProfile(userId, fields) {
     const allowed = ['nickname', 'gender', 'age', 'height_cm', 'weight_kg', 'deepseek_api_key'];
     const sets = [];

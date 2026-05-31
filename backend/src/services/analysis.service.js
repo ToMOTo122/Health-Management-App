@@ -142,7 +142,7 @@ const analysisService = {
     // Fill missing dates with 0
     const dataMap = {};
     for (const row of rows) {
-      dataMap[row.record_date.toISOString().split('T')[0]] = Math.round(row.value * 10) / 10;
+      dataMap[row.record_date] = Math.round(row.value * 10) / 10;
     }
 
     const labels = [];

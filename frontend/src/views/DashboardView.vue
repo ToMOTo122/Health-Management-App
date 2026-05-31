@@ -28,7 +28,7 @@
 
     <!-- 2. 数据型统计卡：值 + 环比趋势 + 7天 sparkline -->
     <div class="metric-grid">
-      <div v-for="m in dashboardMetrics" :key="m.key" class="metric-card" @click="$router.push('/record')">
+      <div v-for="m in dashboardMetrics" :key="m.key" class="metric-card" @click="quickRecord(m.key)">
         <div class="metric-top">
           <div class="metric-icon" :class="m.key"><i :class="m.icon"></i></div>
           <div class="metric-trend" :class="m.trendDir">

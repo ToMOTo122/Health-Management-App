@@ -5,7 +5,7 @@
       {{ editing ? '编辑压力记录' : '记录压力' }}
     </h3>
     <div class="record-form__body grid-2">
-      <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.record_date" /></div>
+      <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.record_date" :max="today" /></div>
       <div class="form-group">
         <label>压力等级</label>
         <select class="form-input" v-model="form.level">
@@ -32,7 +32,8 @@ const props = defineProps({ editing: Object });
 const emit = defineEmits(['saved', 'cancel']);
 const { save } = useRecordSubmit('stress', emit);
 
-const form = reactive({ record_date: localDateString(), level: 'low', score: 3 });
+const today = localDateString();
+const form = reactive({ record_date: today, level: 'low', score: 3 });
 
 onMounted(() => { if (props.editing) Object.assign(form, normalizeRecordForForm(props.editing)); });
 

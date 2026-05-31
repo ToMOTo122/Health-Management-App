@@ -7,7 +7,7 @@
     <div class="record-form__body grid-2">
       <div class="form-group">
         <label>日期</label>
-        <input class="form-input" type="date" v-model="form.record_date" required @change="onTimeChange" />
+        <input class="form-input" type="date" v-model="form.record_date" required :max="today" @change="onTimeChange" />
       </div>
       <div class="form-group">
         <label>入睡时间</label>

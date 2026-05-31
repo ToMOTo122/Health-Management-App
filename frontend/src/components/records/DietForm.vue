@@ -5,7 +5,7 @@
       {{ editing ? '编辑饮食记录' : '记录饮食' }}
     </h3>
     <div class="record-form__body grid-2">
-      <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.record_date" /></div>
+      <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.record_date" :max="today" /></div>
       <div class="form-group"><label>食物名称</label><input class="form-input" v-model="form.food_name" placeholder="如米饭、鸡胸肉" /></div>
       <div class="form-group"><label>摄入时间</label><input class="form-input" type="time" v-model="form.meal_time" /></div>
       <div class="form-group"><label>热量 (kcal)</label><input class="form-input" type="number" v-model="form.calories_kcal" min="0" /></div>
@@ -26,7 +26,8 @@ const props = defineProps({ editing: Object });
 const emit = defineEmits(['saved', 'cancel']);
 const { save } = useRecordSubmit('diet', emit);
 
-const form = reactive({ record_date: localDateString(), food_name: '', meal_time: '12:00', calories_kcal: 0 });
+const today = localDateString();
+const form = reactive({ record_date: today, food_name: '', meal_time: '12:00', calories_kcal: 0 });
 
 onMounted(() => { if (props.editing) Object.assign(form, normalizeRecordForForm(props.editing)); });
 

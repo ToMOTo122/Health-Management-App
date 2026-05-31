@@ -42,7 +42,9 @@ const usersController = {
   async getSettings(req, res) {
     try {
       const profile = await userService.getProfile(req.user.id);
-      return success(res, { has_deepseek_key: profile.has_deepseek_key });
+      // Query the actual key separately since getProfile strips it
+      const key = await userService.getDeepSeekKey(req.user.id);
+      return success(res, { has_deepseek_key: !!key, deepseek_api_key: key || '' });
     } catch (err) {
       if (err.code) return error(res, err.code, err.message, err.status || 400);
       throw err;

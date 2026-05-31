@@ -106,8 +106,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useRoute } from 'vue-router';
 import AppLayout from '../components/layout/AppLayout.vue';
 import LoadingSpinner from '../components/common/LoadingSpinner.vue';
 import SleepForm from '../components/records/SleepForm.vue';
@@ -123,13 +124,10 @@ import { useToast } from '../composables/useToast';
 import { formatDisplayDate, normalizeRecordForForm } from '../utils/date';
 import '../assets/styles/record.css';
 
+const route = useRoute();
 const store = useRecordsStore();
 const { records, loading } = storeToRefs(store);
 const { showToast } = useToast();
-
-const activeTab = ref('sleep');
-const editingRecord = ref(null);
-const filterDate = ref('');
 
 const tabs = [
   { key: 'sleep', label: '睡眠', icon: 'fa-moon' },
@@ -140,6 +138,18 @@ const tabs = [
   { key: 'stress', label: '压力', icon: 'fa-face-tired' },
   { key: 'cycle', label: '生理周期', icon: 'fa-calendar-days' },
 ];
+
+const validTab = (t) => tabs.some(tab => tab.key === t);
+const activeTab = ref(validTab(route.query.tab) ? route.query.tab : 'sleep');
+
+watch(() => route.query.tab, (tab) => {
+  if (validTab(tab)) {
+    activeTab.value = tab;
+    fetchData();
+  }
+});
+const editingRecord = ref(null);
+const filterDate = ref('');
 
 const formMap = { sleep: SleepForm, steps: StepsForm, water: WaterForm, exercise: ExerciseForm, diet: DietForm, stress: StressForm, cycle: CycleForm };
 const currentForm = computed(() => formMap[activeTab.value]);
@@ -162,8 +172,10 @@ function displayRecordDate(record) {
 }
 
 function formatCell(record, header) {
-  if (header.includes('时长(min)')) return record.duration_min + 'min';
-  if (header.includes('时长')) return record.duration_h + 'h';
+  if (header.includes('时长')) {
+    if (record.duration_min != null) return record.duration_min + 'min';
+    if (record.duration_h != null) return record.duration_h + 'h';
+  }
   if (header.includes('步数')) return record.steps?.toLocaleString();
   if (header.includes('饮水')) return record.amount_ml + 'ml';
   if (header.includes('运动类型')) return record.exercise_type;

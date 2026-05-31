@@ -7,11 +7,11 @@
     <div class="record-form__body grid-2">
       <div class="form-group">
         <label>开始日期</label>
-        <input class="form-input" type="date" v-model="form.start_date" required @change="onDateChange" />
+        <input class="form-input" type="date" v-model="form.start_date" required :max="today" @change="onDateChange" />
       </div>
       <div class="form-group">
         <label>结束日期</label>
-        <input class="form-input" type="date" v-model="form.end_date" required @change="onDateChange" />
+        <input class="form-input" type="date" v-model="form.end_date" required :max="today" @change="onDateChange" />
         <p v-if="dateHint" class="form-hint form-hint--warn">{{ dateHint }}</p>
         <p v-else-if="overlapHint" class="form-hint form-hint--warn">{{ overlapHint }}</p>
       </div>
@@ -46,6 +46,7 @@ const { showToast } = useToast();
 const store = useRecordsStore();
 const { records } = storeToRefs(store);
 
+const today = localDateString();
 const form = reactive({ start_date: localDateString(), end_date: localDateString(), cycle_length: 28, notes: '' });
 
 const dateHint = computed(() => assertCycleDateOrder(form.start_date, form.end_date));
